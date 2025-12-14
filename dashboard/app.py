@@ -350,12 +350,14 @@ def fetch_all_data_batch(time_range):
     minmax_cache_elapsed = time.time() - minmax_cache_start
     logger.info(f"    ⏱️  Min/max calculation took {minmax_cache_elapsed:.2f}s")
 
-    # OPTIMIZATION: Get latest values from batch data (eliminates 1 DB query)
-    logger.info(f"  📊 Pre-calculating latest values from batch data (used by status task)...")
+    # FIX: Get latest values directly from DB using last() - NOT from aggregated batch data
+    # The batch data uses aggregateWindow(fn: mean) which causes averaged values
+    # For Thermia H66, temperatures must always end in .0 (e.g., 33.0, not 31.9)
+    logger.info(f"  📊 Fetching latest values directly from DB (avoids mean aggregation bug)...")
     latest_cache_start = time.time()
-    cached_latest_values = data_query.get_latest_values_from_df(df)
+    cached_latest_values = data_query.get_latest_values()  # Uses |> last() - actual raw values
     latest_cache_elapsed = time.time() - latest_cache_start
-    logger.info(f"    ⏱️  Latest values calculation took {latest_cache_elapsed:.2f}s")
+    logger.info(f"    ⏱️  Latest values query took {latest_cache_elapsed:.2f}s")
 
     # OPTIMIZATION: Get alarm status from batch data (eliminates 1-2 DB queries)
     logger.info(f"  📊 Pre-calculating alarm status from batch data (used by status task)...")
