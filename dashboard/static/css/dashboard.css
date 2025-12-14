@@ -540,6 +540,14 @@ body {
     margin: 0 auto;
 }
 
+/* Z-index layering: overlays at 10, text at 20 (text always on top) */
+.heatpump-display img[class^="overlay-"] {
+    z-index: 10;
+}
+.heatpump-display div[class^="text-"] {
+    z-index: 20;
+}
+
 /* ===== THERMIA Brand Styles ===== */
 .brand-thermia .heatpump-display {
     background-image: url('../assets/schema/BV_main_Thermia.png');
