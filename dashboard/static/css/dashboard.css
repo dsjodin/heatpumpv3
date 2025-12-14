@@ -545,11 +545,11 @@ body {
     background-image: url('../assets/schema/BV_main_Thermia.png');
 }
 
-/* Thermia overlay positions */
+/* Thermia overlay positions (adjusted +0.3% left, +0.8% top for alignment) */
 .brand-thermia .overlay-3kw_on {
     position: absolute;
-    left: 50.50%;
-    top: 26.73%;
+    left: 50.80%;
+    top: 27.53%;
     width: 43px;
     height: 74px;
     display: none;
@@ -560,8 +560,8 @@ body {
 
 .brand-thermia .overlay-BV_komp_anim {
     position: absolute;
-    left: 22.63%;
-    top: 42.54%;
+    left: 22.93%;
+    top: 43.34%;
     width: 149px;
     height: 186px;
     display: none;
@@ -572,8 +572,8 @@ body {
 
 .brand-thermia .overlay-KB_snurr {
     position: absolute;
-    left: 0.13%;
-    top: 49.44%;
+    left: 0.43%;
+    top: 50.24%;
     width: 55px;
     height: 55px;
     display: none;
@@ -586,8 +586,8 @@ body {
 
 .brand-thermia .overlay-RAD_pil {
     position: absolute;
-    left: 71.88%;
-    top: 44.54%;
+    left: 72.18%;
+    top: 45.34%;
     width: 83px;
     height: 77px;
     display: none;
@@ -598,8 +598,8 @@ body {
 
 .brand-thermia .overlay-RAD_snurr {
     position: absolute;
-    left: 46.13%;
-    top: 67.71%;
+    left: 46.43%;
+    top: 68.51%;
     width: 56px;
     height: 56px;
     display: none;
@@ -612,8 +612,8 @@ body {
 
 .brand-thermia .overlay-VV_hot {
     position: absolute;
-    left: 69.00%;
-    top: 14.03%;
+    left: 69.30%;
+    top: 14.83%;
     width: 102px;
     height: 138px;
     display: none;
@@ -624,8 +624,8 @@ body {
 
 .brand-thermia .overlay-RAD_hot {
     position: absolute;
-    left: 81.88%;
-    top: 42.76%;
+    left: 82.18%;
+    top: 43.56%;
     width: 142px;
     height: 166px;
     display: none;
@@ -728,11 +728,11 @@ body {
     background-image: url('../assets/schema/BV_main_IVT.png');
 }
 
-/* IVT overlay positions */
+/* IVT overlay positions (adjusted +0.3% left, +0.8% top for alignment) */
 .brand-ivt .overlay-3kw_on {
     position: absolute;
-    left: 50.50%;
-    top: 26.73%;
+    left: 50.80%;
+    top: 27.53%;
     width: 44px;
     height: 75px;
     display: none;
@@ -743,8 +743,8 @@ body {
 
 .brand-ivt .overlay-BV_komp_anim {
     position: absolute;
-    left: 22.75%;
-    top: 42.76%;
+    left: 23.05%;
+    top: 43.56%;
     width: 149px;
     height: 186px;
     display: none;
@@ -755,8 +755,8 @@ body {
 
 .brand-ivt .overlay-KB_snurr {
     position: absolute;
-    left: 0.13%;
-    top: 49.22%;
+    left: 0.43%;
+    top: 50.02%;
     width: 55px;
     height: 55px;
     display: none;
@@ -769,8 +769,8 @@ body {
 
 .brand-ivt .overlay-RAD_pil {
     position: absolute;
-    left: 71.88%;
-    top: 44.54%;
+    left: 72.18%;
+    top: 45.34%;
     width: 82px;
     height: 77px;
     display: none;
@@ -781,8 +781,8 @@ body {
 
 .brand-ivt .overlay-RAD_snurr {
     position: absolute;
-    left: 46.13%;
-    top: 49.67%;
+    left: 46.43%;
+    top: 50.47%;
     width: 56px;
     height: 56px;
     display: none;
@@ -795,8 +795,8 @@ body {
 
 .brand-ivt .overlay-RAD_hot {
     position: absolute;
-    left: 82.13%;
-    top: 42.98%;
+    left: 82.43%;
+    top: 43.78%;
     width: 139px;
     height: 162px;
     display: none;
@@ -807,8 +807,8 @@ body {
 
 .brand-ivt .overlay-VB_snurr {
     position: absolute;
-    left: 46.13%;
-    top: 67.93%;
+    left: 46.43%;
+    top: 68.73%;
     width: 55px;
     height: 55px;
     display: none;
@@ -821,8 +821,8 @@ body {
 
 .brand-ivt .overlay-VV_hot {
     position: absolute;
-    left: 69.00%;
-    top: 14.03%;
+    left: 69.30%;
+    top: 14.83%;
     width: 103px;
     height: 139px;
     display: none;
