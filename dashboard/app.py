@@ -79,6 +79,7 @@ connected_clients = {}
 def index():
     """Serve main dashboard page"""
     return render_template('dashboard.html',
+                         brand=provider.get_brand_name(),
                          brand_name=provider.get_display_name(),
                          dashboard_title=provider.get_dashboard_title())
 

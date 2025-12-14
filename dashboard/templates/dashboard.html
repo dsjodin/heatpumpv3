@@ -504,60 +504,73 @@
                         <p class="text-muted mb-3">
                             <i class="fas fa-info-circle"></i> Visar värmepumpens aktuella driftläge med riktiga temperaturvärden och animationer
                         </p>
-                        <div class="schema-container" id="schema-container">
-                            <!-- Background Image -->
-                            <img src="{{ url_for('static', filename='assets/schema/BV_main2.png') }}"
-                                 id="schema-background"
-                                 class="schema-background"
-                                 alt="Heat Pump System Schema">
+                        <div class="schema-container brand-{{ brand }}" id="schema-container" data-brand="{{ brand }}">
+                            <!-- Heatpump Display with brand-specific background -->
+                            <div class="heatpump-display" id="heatpump-display">
 
-                            <!-- Temperature Boxes (positioned with CSS) -->
-                            <div id="temp-utetemp" class="schema-temp-box temp-outdoor">--°C</div>
-                            <div id="temp-varmvatten" class="schema-temp-box temp-hotwater">--°C</div>
-                            <div id="temp-kb-in" class="schema-temp-box temp-brine-in">--°C</div>
-                            <div id="temp-kb-ut" class="schema-temp-box temp-brine-out">--°C</div>
-                            <div id="temp-framledning" class="schema-temp-box temp-forward">--°C</div>
-                            <div id="temp-radiator-retur" class="schema-temp-box temp-return">--°C</div>
+                                <!-- Live Temperature Text Displays -->
+                                <div class="text-outdoor_temp" id="text-outdoor_temp">--°C</div>
+                                <div class="text-hotgas_temp" id="text-hotgas_temp">--°C</div>
+                                {% if brand == 'thermia' %}
+                                <div class="text-integral_value" id="text-integral_value">--</div>
+                                {% endif %}
+                                <div class="text-KB_in_temp" id="text-KB_in_temp">--°C</div>
+                                <div class="text-KB_out_temp" id="text-KB_out_temp">--°C</div>
+                                <div class="text-hotwater_temp" id="text-hotwater_temp">--°C</div>
+                                <div class="text-radiator_forward_temp" id="text-radiator_forward_temp">--°C</div>
+                                <div class="text-radiator_return_temp" id="text-radiator_return_temp">--°C</div>
 
-                            <!-- Animated Components -->
-                            <img src="{{ url_for('static', filename='assets/schema/BV_komp_anim.png') }}"
-                                 id="schema-kompressor"
-                                 class="schema-kompressor"
-                                 style="display: none;">
+                                <!-- Overlay Images (controlled via JavaScript) -->
+                                <!-- 3kW Heater Indicator -->
+                                <img src="{{ url_for('static', filename='assets/schema/3kw-on.png') }}"
+                                     id="overlay-3kw_on"
+                                     class="overlay-3kw_on"
+                                     alt="3kW Heater On">
 
-                            <img src="{{ url_for('static', filename='assets/schema/KB-snurr.png') }}"
-                                 id="schema-kb-pump"
-                                 class="schema-kb-pump rotating"
-                                 style="display: none;">
+                                <!-- Compressor Animation -->
+                                <img src="{{ url_for('static', filename='assets/schema/BV_komp_anim.png') }}"
+                                     id="overlay-BV_komp_anim"
+                                     class="overlay-BV_komp_anim"
+                                     alt="Compressor Running">
 
-                            <img src="{{ url_for('static', filename='assets/schema/VB-snurr.png') }}"
-                                 id="schema-rad-pump"
-                                 class="schema-rad-pump rotating"
-                                 style="display: none;">
+                                <!-- Brine Pump (KB) Spinning -->
+                                <img src="{{ url_for('static', filename='assets/schema/KB-snurr.png') }}"
+                                     id="overlay-KB_snurr"
+                                     class="overlay-KB_snurr"
+                                     alt="Brine Pump Running">
 
-                            <img src="{{ url_for('static', filename='assets/schema/3kw-off.png') }}"
-                                 id="schema-3kw"
-                                 class="schema-3kw">
+                                <!-- Radiator Arrow -->
+                                <img src="{{ url_for('static', filename='assets/schema/RAD-pil.png') }}"
+                                     id="overlay-RAD_pil"
+                                     class="overlay-RAD_pil"
+                                     alt="Radiator Valve Arrow">
 
-                            <img src="{{ url_for('static', filename='assets/schema/RAD-hot.png') }}"
-                                 id="schema-radiator"
-                                 class="schema-radiator"
-                                 style="display: none;">
+                                <!-- Radiator Pump Spinning -->
+                                <img src="{{ url_for('static', filename='assets/schema/RAD-snurr.png') }}"
+                                     id="overlay-RAD_snurr"
+                                     class="overlay-RAD_snurr"
+                                     alt="Radiator Pump Running">
 
-                            <img src="{{ url_for('static', filename='assets/schema/RAD-pil.png') }}"
-                                 id="schema-valve-radiator"
-                                 class="schema-valve-arrow"
-                                 style="display: none;">
+                                <!-- Hot Water Indicator -->
+                                <img src="{{ url_for('static', filename='assets/schema/VV-hot.png') }}"
+                                     id="overlay-VV_hot"
+                                     class="overlay-VV_hot"
+                                     alt="Hot Water Active">
 
-                            <img src="{{ url_for('static', filename='assets/schema/VV-pil.png') }}"
-                                 id="schema-valve-varmvatten"
-                                 class="schema-valve-arrow"
-                                 style="display: none;">
+                                <!-- Radiator Hot Indicator -->
+                                <img src="{{ url_for('static', filename='assets/schema/RAD-hot.png') }}"
+                                     id="overlay-RAD_hot"
+                                     class="overlay-RAD_hot"
+                                     alt="Radiator Heating">
 
-                            <img src="{{ url_for('static', filename='assets/schema/VV-hot.png') }}"
-                                 id="schema-vv-on"
-                                 class="schema-varmvatten"
-                                 style="display: none;">
+                                {% if brand == 'ivt' %}
+                                <!-- IVT Only: VB Pump Spinning (Hot Water Circulation) -->
+                                <img src="{{ url_for('static', filename='assets/schema/VB-snurr.png') }}"
+                                     id="overlay-VB_snurr"
+                                     class="overlay-VB_snurr"
+                                     alt="VB Pump Running">
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </div>

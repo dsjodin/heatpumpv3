@@ -501,81 +501,105 @@ function updateSchemaTemps(data) {
 
     const current = data.status.current;
 
-    // Update temperature boxes
-    const temp_outdoor = document.getElementById('temp-utetemp');
-    const temp_hotwater = document.getElementById('temp-varmvatten');
-    const temp_brine_in = document.getElementById('temp-kb-in');
-    const temp_brine_out = document.getElementById('temp-kb-ut');
-    const temp_forward = document.getElementById('temp-framledning');
-    const temp_return = document.getElementById('temp-radiator-retur');
+    // Get the brand from the schema container data attribute
+    const schemaContainer = document.getElementById('schema-container');
+    const brand = schemaContainer ? schemaContainer.dataset.brand : 'thermia';
 
-    if (temp_outdoor && current.outdoor_temp && current.outdoor_temp.current !== null) {
-        temp_outdoor.textContent = `${current.outdoor_temp.current.toFixed(1)}°C`;
-    }
-    if (temp_hotwater && current.hot_water && current.hot_water.current !== null) {
-        temp_hotwater.textContent = `${current.hot_water.current.toFixed(1)}°C`;
-    }
-    if (temp_brine_in && current.brine_in && current.brine_in.current !== null) {
-        temp_brine_in.textContent = `${current.brine_in.current.toFixed(1)}°C`;
-    }
-    if (temp_brine_out && current.brine_out && current.brine_out.current !== null) {
-        temp_brine_out.textContent = `${current.brine_out.current.toFixed(1)}°C`;
-    }
-    if (temp_forward && current.radiator_forward && current.radiator_forward.current !== null) {
-        temp_forward.textContent = `${current.radiator_forward.current.toFixed(1)}°C`;
-    }
-    if (temp_return && current.radiator_return && current.radiator_return.current !== null) {
-        temp_return.textContent = `${current.radiator_return.current.toFixed(1)}°C`;
-    }
-
-    // Update animated components
-    const komp = document.getElementById('schema-kompressor');
-    const kb_pump = document.getElementById('schema-kb-pump');
-    const rad_pump = document.getElementById('schema-rad-pump');
-    const aux_3kw = document.getElementById('schema-3kw');
-    const radiator = document.getElementById('schema-radiator');
-    const valve_rad = document.getElementById('schema-valve-radiator');
-    const valve_vv = document.getElementById('schema-valve-varmvatten');
-    const vv_hot = document.getElementById('schema-vv-on');
-
-    // Show/hide compressor animation when running
-    if (komp && current.compressor_running !== undefined) {
-        komp.style.display = current.compressor_running ? 'block' : 'none';
-    }
-
-    // Show/hide brine pump rotation - use real pump status
-    if (kb_pump && current.brine_pump_running !== undefined) {
-        kb_pump.style.display = current.brine_pump_running ? 'block' : 'none';
-    }
-
-    // Show/hide radiator pump rotation - use real pump status
-    if (rad_pump && current.radiator_pump_running !== undefined) {
-        rad_pump.style.display = current.radiator_pump_running ? 'block' : 'none';
-    }
-
-    // Change aux heater image based on status
-    if (aux_3kw && current.aux_heater !== undefined) {
-        const aux_src = current.aux_heater ? '/static/assets/schema/3kw-on.png' : '/static/assets/schema/3kw-off.png';
-        if (aux_3kw.src !== aux_src) {
-            aux_3kw.src = aux_src;
+    // Helper function to toggle active class on overlay elements
+    function setOverlayActive(elementId, isActive) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            if (isActive) {
+                element.classList.add('active');
+            } else {
+                element.classList.remove('active');
+            }
         }
     }
 
-    // Show radiator hot indicator when forward temp > 30°C
-    if (radiator && current.radiator_forward && current.radiator_forward.current !== null) {
-        radiator.style.display = current.radiator_forward.current > 30 ? 'block' : 'none';
+    // ==================== Update Temperature Text Displays ====================
+
+    // Outdoor temperature
+    const textOutdoor = document.getElementById('text-outdoor_temp');
+    if (textOutdoor && current.outdoor_temp && current.outdoor_temp.current !== null) {
+        textOutdoor.textContent = `${current.outdoor_temp.current.toFixed(1)}°C`;
     }
 
-    // Valve arrows - use real switch valve status (0=Radiator, 1=Hot Water)
-    if (valve_rad && current.switch_valve_status !== undefined) {
-        valve_rad.style.display = current.switch_valve_status === 0 ? 'block' : 'none';
+    // Hotgas temperature (if available)
+    const textHotgas = document.getElementById('text-hotgas_temp');
+    if (textHotgas && current.hotgas_temp !== undefined && current.hotgas_temp !== null) {
+        textHotgas.textContent = `${current.hotgas_temp.toFixed(1)}°C`;
+    } else if (textHotgas && current.condenser_temp !== undefined && current.condenser_temp !== null) {
+        // Fallback to condenser temp if hotgas not available
+        textHotgas.textContent = `${current.condenser_temp.toFixed(1)}°C`;
     }
-    if (valve_vv && current.switch_valve_status !== undefined) {
-        valve_vv.style.display = current.switch_valve_status > 0 ? 'block' : 'none';
+
+    // Integral value (Thermia only)
+    const textIntegral = document.getElementById('text-integral_value');
+    if (textIntegral && current.integral_value !== undefined && current.integral_value !== null) {
+        textIntegral.textContent = current.integral_value.toFixed(0);
     }
-    // Hot water indicator - show when in hot water mode
-    if (vv_hot && current.switch_valve_status !== undefined) {
-        vv_hot.style.display = current.switch_valve_status > 0 ? 'block' : 'none';
+
+    // KB in temperature (brine in)
+    const textKBIn = document.getElementById('text-KB_in_temp');
+    if (textKBIn && current.brine_in && current.brine_in.current !== null) {
+        textKBIn.textContent = `${current.brine_in.current.toFixed(1)}°C`;
+    }
+
+    // KB out temperature (brine out)
+    const textKBOut = document.getElementById('text-KB_out_temp');
+    if (textKBOut && current.brine_out && current.brine_out.current !== null) {
+        textKBOut.textContent = `${current.brine_out.current.toFixed(1)}°C`;
+    }
+
+    // Hotwater temperature
+    const textHotwater = document.getElementById('text-hotwater_temp');
+    if (textHotwater && current.hot_water && current.hot_water.current !== null) {
+        textHotwater.textContent = `${current.hot_water.current.toFixed(1)}°C`;
+    }
+
+    // Radiator forward temperature
+    const textRadForward = document.getElementById('text-radiator_forward_temp');
+    if (textRadForward && current.radiator_forward && current.radiator_forward.current !== null) {
+        textRadForward.textContent = `${current.radiator_forward.current.toFixed(1)}°C`;
+    }
+
+    // Radiator return temperature
+    const textRadReturn = document.getElementById('text-radiator_return_temp');
+    if (textRadReturn && current.radiator_return && current.radiator_return.current !== null) {
+        textRadReturn.textContent = `${current.radiator_return.current.toFixed(1)}°C`;
+    }
+
+    // ==================== Update Overlay Animations ====================
+
+    // Compressor animation - show when compressor is running
+    setOverlayActive('overlay-BV_komp_anim', current.compressor_running === true);
+
+    // 3kW heater indicator - show when aux heater is on
+    setOverlayActive('overlay-3kw_on', current.aux_heater === true);
+
+    // Brine pump (KB) spinning - show when brine pump is running
+    setOverlayActive('overlay-KB_snurr', current.brine_pump_running === true);
+
+    // Radiator pump spinning - show when radiator pump is running
+    setOverlayActive('overlay-RAD_snurr', current.radiator_pump_running === true);
+
+    // Radiator arrow - show when valve is in radiator position (0)
+    setOverlayActive('overlay-RAD_pil', current.switch_valve_status === 0);
+
+    // Radiator hot indicator - show when radiator forward temp > 30°C
+    const showRadHot = current.radiator_forward &&
+                       current.radiator_forward.current !== null &&
+                       current.radiator_forward.current > 30;
+    setOverlayActive('overlay-RAD_hot', showRadHot);
+
+    // Hot water indicator - show when valve is in hot water position (> 0)
+    setOverlayActive('overlay-VV_hot', current.switch_valve_status > 0);
+
+    // IVT only: VB pump spinning - show when radiator pump running AND in hot water mode
+    if (brand === 'ivt') {
+        const showVBPump = current.radiator_pump_running === true && current.switch_valve_status > 0;
+        setOverlayActive('overlay-VB_snurr', showVBPump);
     }
 }
 
