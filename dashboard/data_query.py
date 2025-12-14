@@ -192,9 +192,10 @@ class HeatPumpDataQuery:
                 from(bucket: "{self.bucket}")
                     |> range(start: -1h)
                     |> filter(fn: (r) => r._measurement == "heatpump")
+                    |> group(columns: ["name"])
                     |> last()
             '''
-            
+
             result = self.query_api.query_data_frame(query)
 
             if isinstance(result, list):
@@ -214,7 +215,7 @@ class HeatPumpDataQuery:
                     }
 
             return latest
-            
+
         except Exception as e:
             logger.error(f"Error getting latest values: {e}")
             return {}
