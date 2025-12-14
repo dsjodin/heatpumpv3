@@ -1,0 +1,721 @@
+/*
+ * Thermia Heat Pump Dashboard - WebSocket Version
+ * Modern design with heat pump themed colors
+ */
+
+/* Import Font Awesome */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+/* ==================== Global Styles ==================== */
+:root {
+    /* Heat Pump Theme Colors */
+    --color-hot: #ff6b6b;
+    --color-warm: #ff8c42;
+    --color-cold: #4dabf7;
+    --color-cool: #339af0;
+    --color-success: #51cf66;
+    --color-warning: #ffd43b;
+    --color-danger: #ff6b6b;
+    --color-info: #74c0fc;
+
+    /* Neutrals */
+    --color-bg: #f8f9fa;
+    --color-card: #ffffff;
+    --color-text: #212529;
+    --color-text-muted: #6c757d;
+    --color-border: #dee2e6;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.12);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+body {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--color-text);
+    min-height: 100vh;
+}
+
+/* ==================== Header ==================== */
+.navbar {
+    box-shadow: var(--shadow-md);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffffff !important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+#last-update {
+    color: #ffffff !important;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.connection-badge {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+    animation: pulse 2s infinite;
+}
+
+.connection-badge.connected {
+    background-color: #28a745 !important;
+}
+
+.connection-badge.disconnected {
+    background-color: #dc3545 !important;
+    animation: none;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* ==================== Controls ==================== */
+.controls-section {
+    background: white;
+    padding: 1.2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+}
+
+.update-time {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+/* ==================== KPI Cards ==================== */
+.kpi-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    transition: all 0.2s ease;
+    overflow: hidden;
+    height: 100%;
+}
+
+.kpi-card .card-body {
+    padding: 0.6rem 0.8rem;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.kpi-success {
+    background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+    color: white;
+}
+
+.kpi-primary {
+    background: linear-gradient(135deg, #339af0 0%, #228be6 100%);
+    color: white;
+}
+
+.kpi-info {
+    background: linear-gradient(135deg, #74c0fc 0%, #4dabf7 100%);
+    color: white;
+}
+
+.kpi-warning {
+    background: linear-gradient(135deg, #ffd43b 0%, #fcc419 100%);
+    color: #212529;
+}
+
+.kpi-icon {
+    font-size: 1.8rem;
+    opacity: 0.85;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+.kpi-label {
+    font-size: 0.7rem;
+    opacity: 0.85;
+    margin-bottom: 0.1rem;
+    line-height: 1;
+}
+
+.kpi-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.1;
+}
+
+.kpi-subtitle {
+    font-size: 0.65rem;
+    opacity: 0.75;
+    margin-top: 0.1rem;
+    line-height: 1;
+}
+
+/* ==================== Chart Cards ==================== */
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.chart-header {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8c42 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.chart-body {
+    padding: 1.5rem;
+}
+
+.chart-container {
+    width: 100%;
+    border-radius: 8px;
+}
+
+/* Plotly/ECharts container styling */
+[id$="-chart"] {
+    border-radius: 8px;
+}
+
+/* ==================== Loading States ==================== */
+.chart-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    color: var(--color-text-muted);
+}
+
+.loading-spinner {
+    border: 4px solid var(--color-border);
+    border-top: 4px solid var(--color-warm);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 768px) {
+    .kpi-value {
+        font-size: 1.2rem;
+    }
+
+    .kpi-icon {
+        font-size: 1.5rem;
+        margin-right: 0.4rem;
+    }
+
+    .kpi-label {
+        font-size: 0.65rem;
+    }
+
+    .kpi-subtitle {
+        font-size: 0.6rem;
+    }
+
+    .kpi-card .card-body {
+        padding: 0.5rem 0.6rem;
+    }
+
+    .chart-card {
+        margin-bottom: 1rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+}
+
+/* ==================== Additional Utilities ==================== */
+.text-gradient {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8c42 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.card-hover:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+/* ==================== Alarm Status ==================== */
+#alarm-card.alarm-active {
+    border-left: 4px solid var(--color-hot);
+}
+
+#alarm-card.alarm-ok {
+    border-left: 4px solid var(--color-success);
+}
+
+.alarm-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.alarm-active .alarm-icon {
+    color: var(--color-hot);
+    animation: pulse-warning 1.5s infinite;
+}
+
+.alarm-ok .alarm-icon {
+    color: var(--color-success);
+}
+
+.alarm-details {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+}
+
+.alarm-description {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+@keyframes pulse-warning {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+/* ==================== Event Log ==================== */
+.event-item {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+    transition: background 0.2s;
+}
+
+.event-item:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.event-item:last-child {
+    border-bottom: none;
+}
+
+.event-time {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.event-type {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.event-type.alarm {
+    background: #fee;
+    color: #c00;
+}
+
+.event-type.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.event-type.info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.event-type.status {
+    background: #e7f5e7;
+    color: #2e7d32;
+}
+
+.event-description {
+    color: #333;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+.event-value {
+    color: #666;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* ==================== Sticky Topbar Quick Stats ==================== */
+.topbar-quickstats {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 2px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1020;
+    position: sticky;
+    top: 0;
+}
+
+.topbar-stat {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.topbar-icon {
+    color: #666;
+    font-size: 1rem;
+}
+
+.topbar-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.topbar-value {
+    color: #212529;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.topbar-cop {
+    color: #51cf66;
+}
+
+.topbar-status {
+    font-size: 0.85rem;
+}
+
+/* ==================== Status Badges ==================== */
+.status-badge {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+    background: #e9ecef;
+    color: #495057;
+    border: none;
+}
+
+.status-badge i {
+    font-size: 0.9rem;
+}
+
+.status-badge-topbar {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+}
+
+.status-badge.status-on {
+    background: #51cf66;
+    color: white;
+}
+
+.status-badge.status-off {
+    background: #adb5bd;
+    color: white;
+}
+
+.status-badge.status-alarm {
+    background: #ff6b6b;
+    color: white;
+    animation: pulse-alarm 1.5s infinite;
+}
+
+@keyframes pulse-alarm {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* ==================== Secondary Temperature Cards ==================== */
+.temp-card-secondary {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    border-left: 4px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.temp-card-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.temp-card-secondary .card-body {
+    padding: 1rem;
+}
+
+.secondary-icon {
+    font-size: 1.5rem;
+}
+
+.secondary-title {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.secondary-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0.25rem;
+}
+
+.minmax-text {
+    font-size: 0.75rem;
+    display: block;
+    color: #868e96;
+}
+
+.sparkline-container {
+    height: 40px;
+    width: 100%;
+}
+
+/* ==================== Hot Water Stats ==================== */
+.hw-stat-box {
+    padding: 1rem;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transition: all 0.3s ease;
+}
+
+.hw-stat-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.hw-stat-icon {
+    font-size: 2rem;
+    color: #4dabf7;
+    margin-bottom: 0.5rem;
+}
+
+.hw-stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #212529;
+    margin: 0;
+}
+
+/* ==================== System Schema ==================== */
+.schema-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+}
+
+.schema-background {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.schema-temp-box {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid #dee2e6;
+    border-radius: 6px;
+    height: 22px;
+    line-height: 22px;
+    padding: 0 6px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #212529;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-width: 55px;
+    text-align: center;
+    z-index: 10;
+}
+
+/* Positioning for temperature boxes */
+#temp-utetemp {
+    position: absolute;
+    top: 12.3%;
+    left: 58.2%;
+}
+
+#temp-varmvatten {
+    position: absolute;
+    top: 25.0%;
+    left: 70.8%;
+}
+
+#temp-kb-in {
+    position: absolute;
+    top: 53.0%;
+    left: 12.0%;
+}
+
+#temp-kb-ut {
+    position: absolute;
+    top: 70.0%;
+    left: 12.0%;
+}
+
+#temp-framledning {
+    position: absolute;
+    top: 53.3%;
+    left: 59.5%;
+}
+
+#temp-radiator-retur {
+    position: absolute;
+    top: 70.0%;
+    left: 59.5%;
+}
+
+/* Animated components */
+#schema-kompressor {
+    position: absolute;
+    top: 43.4%;
+    left: 24.3%;
+    width: 18%;
+    height: auto;
+    z-index: 15;
+}
+
+#schema-kb-pump {
+    position: absolute;
+    top: 48.5%;
+    left: 2.1%;
+    width: 8%;
+    height: auto;
+    z-index: 15;
+    --pump-scale: 0.8;
+    transform-origin: center;
+}
+
+#schema-rad-pump {
+    position: absolute;
+    top: 65.7%;
+    left: 45.9%;
+    width: 8%;
+    height: auto;
+    z-index: 15;
+    --pump-scale: 0.8;
+    transform-origin: center;
+}
+
+#schema-3kw {
+    position: absolute;
+    top: 46.8%;
+    left: 46.4%;
+    width: 6%;
+    height: auto;
+    z-index: 15;
+    transform: scale(0.85);
+    transform-origin: center;
+}
+
+.schema-radiator {
+    position: absolute;
+    top: 42%;
+    right: 2%;
+    width: 18%;
+    height: auto;
+    z-index: 20;
+    transform: scale(0.97);
+    transform-origin: center;
+}
+
+.schema-valve-arrow {
+    position: absolute;
+    top: 47.0%;
+    left: 71.9%;
+    width: 8%;
+    height: auto;
+    z-index: 15;
+    transform: scale(1.25);
+    transform-origin: center;
+}
+
+#schema-vv-on {
+    position: absolute;
+    top: 14.8%;
+    left: 69.6%;
+    width: 10%;
+    z-index: 15;
+}
+
+/* Rotating animation for pumps */
+@keyframes rotate {
+    from { transform: scale(var(--pump-scale, 1)) rotate(0deg); }
+    to   { transform: scale(var(--pump-scale, 1)) rotate(360deg); }
+}
+
+.rotating {
+    animation: rotate 2s linear infinite;
+}
+
+/* ==================== Responsive Design ==================== */
+@media (max-width: 768px) {
+    .schema-container {
+        padding: 10px;
+    }
+
+    .schema-temp-box {
+        height: 14px !important;
+        line-height: 14px !important;
+        font-size: 0.6rem !important;
+        padding: 0 3px !important;
+        min-width: 35px !important;
+        border-width: 1px !important;
+    }
+
+    .topbar-quickstats {
+        font-size: 0.85rem;
+    }
+
+    .topbar-value {
+        font-size: 0.9rem;
+    }
+
+    .secondary-value {
+        font-size: 1.4rem;
+    }
+
+    .hw-stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .schema-temp-box {
+        height: 11px !important;
+        line-height: 11px !important;
+        font-size: 0.5rem !important;
+        padding: 0 2px !important;
+        min-width: 28px !important;
+        border-width: 1px !important;
+    }
+}
