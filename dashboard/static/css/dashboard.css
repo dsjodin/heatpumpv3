@@ -604,6 +604,18 @@ body {
     display: block;
 }
 
+.brand-thermia .overlay-VV_pil {
+    position: absolute;
+    left: 72.18%;
+    top: 45.34%;
+    width: 83px;
+    height: 77px;
+    display: none;
+}
+.brand-thermia .overlay-VV_pil.active {
+    display: block;
+}
+
 .brand-thermia .overlay-RAD_snurr {
     position: absolute;
     left: 46.43%;
@@ -784,6 +796,18 @@ body {
     display: none;
 }
 .brand-ivt .overlay-RAD_pil.active {
+    display: block;
+}
+
+.brand-ivt .overlay-VV_pil {
+    position: absolute;
+    left: 72.18%;
+    top: 45.34%;
+    width: 82px;
+    height: 77px;
+    display: none;
+}
+.brand-ivt .overlay-VV_pil.active {
     display: block;
 }
 

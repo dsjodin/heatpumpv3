@@ -587,6 +587,12 @@ function updateSchemaTemps(data) {
     // Radiator arrow - show when valve is in radiator position (0)
     setOverlayActive('overlay-RAD_pil', current.switch_valve_status === 0);
 
+    // Hot water arrow - show when valve is in hot water position (same location as radiator arrow)
+    const showVVPil = current.switch_valve_status !== undefined &&
+                      current.switch_valve_status !== null &&
+                      current.switch_valve_status > 0;
+    setOverlayActive('overlay-VV_pil', showVVPil);
+
     // Radiator hot indicator - show when valve is in radiator mode (0) OR radiator forward temp > 32°C
     const showRadHot = current.switch_valve_status === 0 ||
                        (current.radiator_forward &&
