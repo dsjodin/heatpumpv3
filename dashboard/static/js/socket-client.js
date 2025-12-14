@@ -594,8 +594,11 @@ function updateSchemaTemps(data) {
                         current.radiator_forward.current > 32);
     setOverlayActive('overlay-RAD_hot', showRadHot);
 
-    // Hot water indicator - show when valve is in hot water position (> 0)
-    setOverlayActive('overlay-VV_hot', current.switch_valve_status > 0);
+    // Hot water indicator - show when valve is in hot water position (växelventil = varmvattenläge)
+    const showVVHot = current.switch_valve_status !== undefined &&
+                      current.switch_valve_status !== null &&
+                      current.switch_valve_status > 0;
+    setOverlayActive('overlay-VV_hot', showVVHot);
 
     // IVT only: VB pump spinning - show when radiator pump running AND in hot water mode
     if (brand === 'ivt') {
