@@ -405,6 +405,10 @@ document.addEventListener('DOMContentLoaded', () => {
         timeRangeSelect.addEventListener('change', (e) => {
             currentTimeRange = e.target.value;
             console.log(`🔄 Time range: ${currentTimeRange}`);
+            // Reset zoom state when time range changes
+            if (window.resetZoomState) {
+                window.resetZoomState();
+            }
             if (connected) {
                 socket.emit('change_time_range', { range: currentTimeRange });
             } else {

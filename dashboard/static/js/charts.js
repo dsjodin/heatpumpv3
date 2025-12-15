@@ -7,6 +7,7 @@
 let mainChart = null;
 let currentChartType = 'temperature';
 let chartData = null;
+let savedZoomState = null;  // Preserve zoom between updates
 
 // Chart colors
 const COLORS = {
@@ -50,6 +51,17 @@ function initMainChart() {
     // Handle resize
     window.addEventListener('resize', () => {
         if (mainChart) mainChart.resize();
+    });
+
+    // Save zoom state when user zooms
+    mainChart.on('datazoom', (params) => {
+        const option = mainChart.getOption();
+        if (option.dataZoom && option.dataZoom.length > 0) {
+            savedZoomState = {
+                start: option.dataZoom[0].start,
+                end: option.dataZoom[0].end
+            };
+        }
     });
 
     console.log('📊 Main chart initialized');
@@ -144,7 +156,7 @@ function renderTemperatureChart(data) {
             left: 50,
             right: 20,
             top: 20,
-            bottom: 50
+            bottom: 80
         },
         xAxis: {
             type: 'category',
@@ -163,12 +175,27 @@ function renderTemperatureChart(data) {
         },
         series: series,
         dataZoom: [
-            { type: 'inside', start: 0, end: 100 },
-            { type: 'slider', start: 0, end: 100, height: 20, bottom: 25 }
+            {
+                type: 'inside',
+                start: savedZoomState ? savedZoomState.start : 0,
+                end: savedZoomState ? savedZoomState.end : 100
+            },
+            {
+                type: 'slider',
+                start: savedZoomState ? savedZoomState.start : 0,
+                end: savedZoomState ? savedZoomState.end : 100,
+                height: 30,
+                bottom: 30,
+                showDetail: true,
+                labelFormatter: (value) => {
+                    const d = new Date(value);
+                    return d.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+            }
         ]
     };
 
-    mainChart.setOption(option, true);
+    mainChart.setOption(option, { notMerge: false, lazyUpdate: true });
     updateChartTitle('temperature');
 }
 
@@ -212,7 +239,7 @@ function renderPowerChart(data) {
                 return result;
             }
         },
-        grid: { left: 60, right: 20, top: 20, bottom: 50 },
+        grid: { left: 60, right: 20, top: 20, bottom: 80 },
         xAxis: {
             type: 'category',
             data: timestamps,
@@ -230,12 +257,27 @@ function renderPowerChart(data) {
         },
         series: series,
         dataZoom: [
-            { type: 'inside', start: 0, end: 100 },
-            { type: 'slider', start: 0, end: 100, height: 20, bottom: 25 }
+            {
+                type: 'inside',
+                start: savedZoomState ? savedZoomState.start : 0,
+                end: savedZoomState ? savedZoomState.end : 100
+            },
+            {
+                type: 'slider',
+                start: savedZoomState ? savedZoomState.start : 0,
+                end: savedZoomState ? savedZoomState.end : 100,
+                height: 30,
+                bottom: 30,
+                showDetail: true,
+                labelFormatter: (value) => {
+                    const d = new Date(value);
+                    return d.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+            }
         ]
     };
 
-    mainChart.setOption(option, true);
+    mainChart.setOption(option, { notMerge: false, lazyUpdate: true });
     updateChartTitle('power');
 }
 
@@ -278,7 +320,7 @@ function renderCOPChart(data) {
                 return result;
             }
         },
-        grid: { left: 50, right: 20, top: 20, bottom: 50 },
+        grid: { left: 50, right: 20, top: 20, bottom: 80 },
         xAxis: {
             type: 'category',
             data: timestamps,
@@ -297,12 +339,27 @@ function renderCOPChart(data) {
         },
         series: series,
         dataZoom: [
-            { type: 'inside', start: 0, end: 100 },
-            { type: 'slider', start: 0, end: 100, height: 20, bottom: 25 }
+            {
+                type: 'inside',
+                start: savedZoomState ? savedZoomState.start : 0,
+                end: savedZoomState ? savedZoomState.end : 100
+            },
+            {
+                type: 'slider',
+                start: savedZoomState ? savedZoomState.start : 0,
+                end: savedZoomState ? savedZoomState.end : 100,
+                height: 30,
+                bottom: 30,
+                showDetail: true,
+                labelFormatter: (value) => {
+                    const d = new Date(value);
+                    return d.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+            }
         ]
     };
 
-    mainChart.setOption(option, true);
+    mainChart.setOption(option, { notMerge: false, lazyUpdate: true });
     updateChartTitle('cop');
 }
 
@@ -346,91 +403,123 @@ function renderEnergyChart(data) {
         }]
     };
 
-    mainChart.setOption(option, true);
+    mainChart.setOption(option, { notMerge: true, lazyUpdate: true });
     updateChartTitle('energy');
 }
 
 // ==================== Overlay Mark Areas ====================
 
-function buildOverlayMarkAreas(data, timestamps) {
+function buildOverlayMarkAreas(data, chartTimestamps) {
     const markAreas = [];
 
     const showCompressor = document.getElementById('overlay-compressor')?.checked;
     const showValve = document.getElementById('overlay-valve')?.checked;
     const showAux = document.getElementById('overlay-aux')?.checked;
 
-    // Get valve data for overlays
-    if (data.valve && data.valve.timestamps && data.valve.compressor_status) {
-        const valveTimestamps = data.valve.timestamps;
-        const compressorStatus = data.valve.compressor_status;
-        const valveStatus = data.valve.switch_valve_status;
-        const auxStatus = data.valve.additional_heat_percent;
+    // Try different data sources for overlays
+    // First check valve data (has compressor_status, valve_status)
+    // Data format: [[timestamp, value], [timestamp, value], ...]
 
-        // Find ON periods for compressor
-        if (showCompressor && compressorStatus) {
-            let startIdx = null;
-            for (let i = 0; i < compressorStatus.length; i++) {
-                if (compressorStatus[i] === 1 && startIdx === null) {
-                    startIdx = i;
-                } else if (compressorStatus[i] === 0 && startIdx !== null) {
-                    markAreas.push([
-                        { xAxis: valveTimestamps[startIdx], itemStyle: { color: COLORS.compressor_overlay } },
-                        { xAxis: valveTimestamps[i - 1] }
-                    ]);
-                    startIdx = null;
-                }
+    // Get compressor status data
+    let compressorData = null;
+    let valveData = null;
+    let auxData = null;
+
+    // Check valve endpoint data
+    if (data.valve) {
+        if (data.valve.compressor_status && Array.isArray(data.valve.compressor_status)) {
+            compressorData = data.valve.compressor_status;
+        }
+        if (data.valve.valve_status && Array.isArray(data.valve.valve_status)) {
+            valveData = data.valve.valve_status;
+        }
+    }
+
+    // Check power endpoint data for aux heater
+    if (data.power && data.power.additional_heat_percent && Array.isArray(data.power.additional_heat_percent)) {
+        auxData = data.power.additional_heat_percent;
+    }
+
+    // Check performance data as alternative source
+    if (!compressorData && data.performance && data.performance.compressor_status) {
+        compressorData = data.performance.compressor_status;
+    }
+
+    // Helper function to extract periods from [[timestamp, value], ...] data
+    function extractOnPeriods(dataArray, checkFn) {
+        const periods = [];
+        if (!dataArray || dataArray.length === 0) return periods;
+
+        let startTime = null;
+        let lastTime = null;
+
+        for (let i = 0; i < dataArray.length; i++) {
+            const item = dataArray[i];
+            // Handle both array format [[time, value]] and object format
+            let timestamp, value;
+            if (Array.isArray(item)) {
+                timestamp = item[0];
+                value = item[1];
+            } else if (typeof item === 'object') {
+                timestamp = item.time || item._time;
+                value = item.value || item._value;
+            } else {
+                continue;
             }
-            if (startIdx !== null) {
-                markAreas.push([
-                    { xAxis: valveTimestamps[startIdx], itemStyle: { color: COLORS.compressor_overlay } },
-                    { xAxis: valveTimestamps[valveTimestamps.length - 1] }
-                ]);
+
+            const isOn = checkFn(value);
+
+            if (isOn && startTime === null) {
+                startTime = timestamp;
+            } else if (!isOn && startTime !== null) {
+                periods.push({ start: startTime, end: lastTime });
+                startTime = null;
             }
+            lastTime = timestamp;
         }
 
-        // Find hot water periods (valve status = 1)
-        if (showValve && valveStatus) {
-            let startIdx = null;
-            for (let i = 0; i < valveStatus.length; i++) {
-                if (valveStatus[i] === 1 && startIdx === null) {
-                    startIdx = i;
-                } else if (valveStatus[i] === 0 && startIdx !== null) {
-                    markAreas.push([
-                        { xAxis: valveTimestamps[startIdx], itemStyle: { color: COLORS.valve_overlay } },
-                        { xAxis: valveTimestamps[i - 1] }
-                    ]);
-                    startIdx = null;
-                }
-            }
-            if (startIdx !== null) {
-                markAreas.push([
-                    { xAxis: valveTimestamps[startIdx], itemStyle: { color: COLORS.valve_overlay } },
-                    { xAxis: valveTimestamps[valveTimestamps.length - 1] }
-                ]);
-            }
+        // Close final period if still open
+        if (startTime !== null && lastTime) {
+            periods.push({ start: startTime, end: lastTime });
         }
 
-        // Find aux heater periods
-        if (showAux && auxStatus) {
-            let startIdx = null;
-            for (let i = 0; i < auxStatus.length; i++) {
-                if (auxStatus[i] > 0 && startIdx === null) {
-                    startIdx = i;
-                } else if (auxStatus[i] === 0 && startIdx !== null) {
-                    markAreas.push([
-                        { xAxis: valveTimestamps[startIdx], itemStyle: { color: COLORS.aux_overlay } },
-                        { xAxis: valveTimestamps[i - 1] }
-                    ]);
-                    startIdx = null;
-                }
-            }
-            if (startIdx !== null) {
-                markAreas.push([
-                    { xAxis: valveTimestamps[startIdx], itemStyle: { color: COLORS.aux_overlay } },
-                    { xAxis: valveTimestamps[auxStatus.length - 1] }
-                ]);
-            }
-        }
+        return periods;
+    }
+
+    // Find compressor ON periods
+    if (showCompressor && compressorData) {
+        const periods = extractOnPeriods(compressorData, v => v === 1 || v > 0);
+        periods.forEach(p => {
+            markAreas.push([
+                { xAxis: p.start, itemStyle: { color: COLORS.compressor_overlay } },
+                { xAxis: p.end }
+            ]);
+        });
+        console.log(`📊 Compressor overlays: ${periods.length} periods`);
+    }
+
+    // Find valve hot water periods (valve status = 1)
+    if (showValve && valveData) {
+        const periods = extractOnPeriods(valveData, v => v === 1 || v > 0);
+        periods.forEach(p => {
+            markAreas.push([
+                { xAxis: p.start, itemStyle: { color: COLORS.valve_overlay } },
+                { xAxis: p.end }
+            ]);
+        });
+        console.log(`📊 Valve overlays: ${periods.length} periods`);
+    }
+
+    // Find aux heater ON periods
+    if (showAux && auxData) {
+        const periods = extractOnPeriods(auxData, v => v > 0);
+        periods.forEach(p => {
+            markAreas.push([
+                { xAxis: p.start, itemStyle: { color: COLORS.aux_overlay } },
+                { xAxis: p.end }
+            ]);
+        });
+        console.log(`📊 Aux heater overlays: ${periods.length} periods`);
     }
 
     return markAreas;
@@ -491,6 +580,11 @@ function resizeMainChart() {
     }
 }
 
+function resetZoomState() {
+    savedZoomState = null;
+    console.log('📊 Zoom state reset');
+}
+
 // ==================== Analys Stats ====================
 
 function updateAnalysStats(data) {
@@ -535,6 +629,7 @@ window.switchChart = switchChart;
 window.updateSeriesVisibility = updateSeriesVisibility;
 window.updateChartOverlays = updateChartOverlays;
 window.resizeMainChart = resizeMainChart;
+window.resetZoomState = resetZoomState;
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
