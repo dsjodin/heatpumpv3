@@ -147,20 +147,31 @@ body {
     border-radius: 8px 8px 0 0 !important;
 }
 
-/* ==================== Metric Cards ==================== */
+/* ==================== Metric Cards - Modern Flat Style ==================== */
 .metric-card {
-    background: white;
+    background: #ffffff;
     border-radius: 8px;
-    padding: 0.4rem 0.5rem;
-    box-shadow: var(--shadow-sm);
+    padding: 0.6rem 0.5rem;
+    border: none;
     text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.2s ease;
     height: 100%;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 8px 8px 0 0;
 }
 
 .metric-card:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
 .metric-label {
@@ -168,18 +179,17 @@ body {
     color: #636e72;
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    margin-bottom: 0.1rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin-bottom: 0.15rem;
+    font-weight: 600;
 }
 
 .metric-label i {
-    margin-right: 0.15rem;
+    margin-right: 0.25rem;
+    opacity: 0.8;
 }
 
 .metric-value {
-    font-size: 1.1rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: #2d3436;
     line-height: 1.1;
@@ -187,44 +197,44 @@ body {
 
 .metric-minmax {
     display: flex;
-    justify-content: space-between;
-    font-size: 0.55rem;
-    color: #636e72;
-    margin-top: 0.15rem;
-    padding-top: 0.15rem;
-    border-top: 1px solid #eee;
+    justify-content: space-around;
+    font-size: 0.65rem;
+    color: #868e96;
+    margin-top: 0.35rem;
+    padding-top: 0.35rem;
+    border-top: 1px dashed rgba(0,0,0,0.08);
 }
 
 .metric-minmax span {
     display: flex;
     align-items: center;
-    gap: 1px;
+    gap: 2px;
 }
 
 .metric-minmax i {
-    font-size: 0.5rem;
+    font-size: 0.55rem;
 }
 
 .metric-minmax .fa-arrow-down { color: #3498db; }
-.metric-minmax .fa-minus { color: #636e72; }
+.metric-minmax .fa-minus { color: #95a5a6; }
 .metric-minmax .fa-arrow-up { color: #e74c3c; }
 
-/* Metric card color accents */
-.metric-outdoor { border-left: 3px solid #74b9ff; }
-.metric-indoor { border-left: 3px solid #00b894; }
-.metric-hotgas { border-left: 3px solid #e17055; }
-.metric-integral { border-left: 3px solid #636e72; }
-.metric-rad-forward { border-left: 3px solid #ff6b6b; }
-.metric-rad-return { border-left: 3px solid #feca57; }
-.metric-brine-in { border-left: 3px solid #54a0ff; }
-.metric-brine-out { border-left: 3px solid #00d2d3; }
-.metric-hotwater { border-left: 3px solid #ff9ff3; }
-.metric-power { border-left: 3px solid #f39c12; }
-.metric-cop { border-left: 3px solid #27ae60; }
-.metric-energy { border-left: 3px solid #3498db; }
-.metric-cost { border-left: 3px solid #f1c40f; }
-.metric-comp-time { border-left: 3px solid #9b59b6; }
-.metric-aux-time { border-left: 3px solid #e74c3c; }
+/* Metric card color accents - top bar colors */
+.metric-outdoor::before { background: linear-gradient(90deg, #74b9ff, #a3d1ff); }
+.metric-indoor::before { background: linear-gradient(90deg, #00b894, #55efc4); }
+.metric-hotgas::before { background: linear-gradient(90deg, #e17055, #fab1a0); }
+.metric-integral::before { background: linear-gradient(90deg, #636e72, #b2bec3); }
+.metric-rad-forward::before { background: linear-gradient(90deg, #ff6b6b, #ff8787); }
+.metric-rad-return::before { background: linear-gradient(90deg, #feca57, #fed77a); }
+.metric-brine-in::before { background: linear-gradient(90deg, #54a0ff, #74b9ff); }
+.metric-brine-out::before { background: linear-gradient(90deg, #00d2d3, #81ecec); }
+.metric-hotwater::before { background: linear-gradient(90deg, #ff9ff3, #ffc8f0); }
+.metric-power::before { background: linear-gradient(90deg, #f39c12, #f5b041); }
+.metric-cop::before { background: linear-gradient(90deg, #27ae60, #58d68d); }
+.metric-energy::before { background: linear-gradient(90deg, #3498db, #5dade2); }
+.metric-cost::before { background: linear-gradient(90deg, #f1c40f, #f4d03f); }
+.metric-comp-time::before { background: linear-gradient(90deg, #9b59b6, #bb8fce); }
+.metric-aux-time::before { background: linear-gradient(90deg, #e74c3c, #ec7063); }
 
 .data-table {
     font-size: 0.85rem;
