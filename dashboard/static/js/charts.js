@@ -98,13 +98,13 @@ function updateMainChart(data) {
 function renderTemperatureChart(data) {
     if (!data.temperature || !data.temperature.timestamps) return;
 
-    const timestamps = data.temperature.timestamps.map(t => new Date(t));
+    const timestamps = data.temperature.timestamps;
     const series = [];
 
     // Get visible series from checkboxes
     const visibleSeries = getVisibleSeries();
 
-    // Temperature series
+    // Temperature series - format as [[timestamp, value], ...] for time axis
     const tempMetrics = [
         'radiator_forward', 'radiator_return', 'hot_water_top',
         'brine_in_evaporator', 'brine_out_condenser', 'outdoor_temp', 'pressure_tube_temp'
@@ -112,10 +112,12 @@ function renderTemperatureChart(data) {
 
     tempMetrics.forEach(metric => {
         if (data.temperature[metric] && visibleSeries.includes(metric)) {
+            // Format data as [timestamp, value] pairs for time axis
+            const formattedData = timestamps.map((t, i) => [t, data.temperature[metric][i]]);
             series.push({
                 name: SERIES_NAMES[metric] || metric,
                 type: 'line',
-                data: data.temperature[metric],
+                data: formattedData,
                 smooth: true,
                 symbol: 'none',
                 lineStyle: { width: 2, color: COLORS[metric] },
@@ -138,10 +140,12 @@ function renderTemperatureChart(data) {
         tooltip: {
             trigger: 'axis',
             formatter: function(params) {
-                let result = params[0].axisValueLabel + '<br/>';
+                if (!params || params.length === 0) return '';
+                const time = new Date(params[0].value[0]);
+                let result = time.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '<br/>';
                 params.forEach(p => {
-                    if (p.value !== null && p.value !== undefined) {
-                        result += `${p.marker} ${p.seriesName}: ${p.value.toFixed(1)}°C<br/>`;
+                    if (p.value && p.value[1] !== null && p.value[1] !== undefined) {
+                        result += `${p.marker} ${p.seriesName}: ${p.value[1].toFixed(1)}°C<br/>`;
                     }
                 });
                 return result;
@@ -159,8 +163,7 @@ function renderTemperatureChart(data) {
             bottom: 80
         },
         xAxis: {
-            type: 'category',
-            data: timestamps,
+            type: 'time',
             axisLabel: {
                 formatter: (value) => {
                     const d = new Date(value);
@@ -202,11 +205,11 @@ function renderTemperatureChart(data) {
 // ==================== Power Chart ====================
 
 function renderPowerChart(data) {
-    if (!data.power || !data.power.timestamps) return;
+    if (!data.power || !data.power.power_consumption) return;
 
-    const timestamps = data.power.timestamps.map(t => new Date(t));
     const series = [];
 
+    // Power data is already in [[timestamp, value]] format
     if (data.power.power_consumption) {
         series.push({
             name: 'Effekt',
@@ -221,7 +224,7 @@ function renderPowerChart(data) {
     }
 
     // Add overlay bands
-    const markAreas = buildOverlayMarkAreas(data, timestamps);
+    const markAreas = buildOverlayMarkAreas(data, null);
     if (series.length > 0 && markAreas.length > 0) {
         series[0].markArea = { silent: true, data: markAreas };
     }
@@ -230,10 +233,12 @@ function renderPowerChart(data) {
         tooltip: {
             trigger: 'axis',
             formatter: function(params) {
-                let result = params[0].axisValueLabel + '<br/>';
+                if (!params || params.length === 0) return '';
+                const time = new Date(params[0].value[0]);
+                let result = time.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '<br/>';
                 params.forEach(p => {
-                    if (p.value !== null && p.value !== undefined) {
-                        result += `${p.marker} ${p.seriesName}: ${p.value.toFixed(0)} W<br/>`;
+                    if (p.value && p.value[1] !== null && p.value[1] !== undefined) {
+                        result += `${p.marker} ${p.seriesName}: ${p.value[1].toFixed(0)} W<br/>`;
                     }
                 });
                 return result;
@@ -241,8 +246,7 @@ function renderPowerChart(data) {
         },
         grid: { left: 60, right: 20, top: 20, bottom: 80 },
         xAxis: {
-            type: 'category',
-            data: timestamps,
+            type: 'time',
             axisLabel: {
                 formatter: (value) => {
                     const d = new Date(value);
@@ -286,14 +290,17 @@ function renderPowerChart(data) {
 function renderCOPChart(data) {
     if (!data.cop || !data.cop.timestamps) return;
 
-    const timestamps = data.cop.timestamps.map(t => new Date(t));
+    const timestamps = data.cop.timestamps;
+    const copValues = data.cop.values || data.cop.cop || [];
     const series = [];
 
-    if (data.cop.cop) {
+    if (copValues.length > 0) {
+        // Format as [[timestamp, value]] for time axis
+        const formattedData = timestamps.map((t, i) => [t, copValues[i]]);
         series.push({
             name: 'COP',
             type: 'line',
-            data: data.cop.cop,
+            data: formattedData,
             smooth: true,
             symbol: 'none',
             lineStyle: { width: 3, color: COLORS.cop },
@@ -311,10 +318,12 @@ function renderCOPChart(data) {
         tooltip: {
             trigger: 'axis',
             formatter: function(params) {
-                let result = params[0].axisValueLabel + '<br/>';
+                if (!params || params.length === 0) return '';
+                const time = new Date(params[0].value[0]);
+                let result = time.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '<br/>';
                 params.forEach(p => {
-                    if (p.value !== null && p.value !== undefined) {
-                        result += `${p.marker} ${p.seriesName}: ${p.value.toFixed(2)}<br/>`;
+                    if (p.value && p.value[1] !== null && p.value[1] !== undefined) {
+                        result += `${p.marker} ${p.seriesName}: ${p.value[1].toFixed(2)}<br/>`;
                     }
                 });
                 return result;
@@ -322,8 +331,7 @@ function renderCOPChart(data) {
         },
         grid: { left: 50, right: 20, top: 20, bottom: 80 },
         xAxis: {
-            type: 'category',
-            data: timestamps,
+            type: 'time',
             axisLabel: {
                 formatter: (value) => {
                     const d = new Date(value);
