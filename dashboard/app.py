@@ -1296,15 +1296,20 @@ def get_status_data(time_range='24h'):
         # Get min/max values for the time range
         min_max = data_query.get_min_max_values(time_range)
 
-        # Calculate COP average for the selected time range
+        # Calculate COP - use Period COP (Σheat/Σelec) for consistency
         current_cop = None
         try:
-            cop_df = data_query.calculate_cop(time_range)  # Use same time range as dashboard
-            if not cop_df.empty and 'estimated_cop' in cop_df.columns:
-                # Get the average COP value for consistency with KPI card
-                cop_values = cop_df['estimated_cop'].dropna()
-                if len(cop_values) > 0:
-                    current_cop = round(cop_values.mean(), 2)
+            cop_df = data_query.calculate_cop(time_range)
+            if not cop_df.empty:
+                # Prefer seasonal_cop (total COP = Σheat/Σelec)
+                if 'seasonal_cop' in cop_df.columns:
+                    seasonal_values = cop_df['seasonal_cop'].dropna()
+                    if len(seasonal_values) > 0:
+                        current_cop = round(seasonal_values.iloc[-1], 2)
+                elif 'estimated_cop' in cop_df.columns:
+                    cop_values = cop_df['estimated_cop'].dropna()
+                    if len(cop_values) > 0:
+                        current_cop = round(cop_values.mean(), 2)
         except Exception as e:
             logger.debug(f"Could not calculate COP: {e}")
             pass
@@ -1378,12 +1383,17 @@ def get_status_data_cached(time_range='24h', cached_cop_df=None, cached_min_max=
         # Use cached min/max values if provided (avoids 3 separate DB queries)
         min_max = cached_min_max if cached_min_max is not None else data_query.get_min_max_values(time_range)
 
-        # Use cached COP data instead of recalculating
+        # Use cached COP data - use Period COP (Σheat/Σelec) for consistency
         current_cop = None
-        if cached_cop_df is not None and not cached_cop_df.empty and 'estimated_cop' in cached_cop_df.columns:
-            cop_values = cached_cop_df['estimated_cop'].dropna()
-            if len(cop_values) > 0:
-                current_cop = round(cop_values.mean(), 2)
+        if cached_cop_df is not None and not cached_cop_df.empty:
+            if 'seasonal_cop' in cached_cop_df.columns:
+                seasonal_values = cached_cop_df['seasonal_cop'].dropna()
+                if len(seasonal_values) > 0:
+                    current_cop = round(seasonal_values.iloc[-1], 2)
+            elif 'estimated_cop' in cached_cop_df.columns:
+                cop_values = cached_cop_df['estimated_cop'].dropna()
+                if len(cop_values) > 0:
+                    current_cop = round(cop_values.mean(), 2)
 
         def get_value_with_minmax(metric_name):
             """Helper to get current value with min/max/avg"""
@@ -1493,12 +1503,19 @@ def get_status_data_fully_cached(cached_cop_df, cached_min_max, cached_latest_va
         # Use cached min/max values
         min_max = cached_min_max
 
-        # Use cached COP data
+        # Use cached COP data - use Period COP (Σheat/Σelec) for consistency
         current_cop = None
-        if cached_cop_df is not None and not cached_cop_df.empty and 'estimated_cop' in cached_cop_df.columns:
-            cop_values = cached_cop_df['estimated_cop'].dropna()
-            if len(cop_values) > 0:
-                current_cop = round(cop_values.mean(), 2)
+        if cached_cop_df is not None and not cached_cop_df.empty:
+            # Prefer seasonal_cop (total COP = Σheat/Σelec) for accurate period average
+            if 'seasonal_cop' in cached_cop_df.columns:
+                seasonal_values = cached_cop_df['seasonal_cop'].dropna()
+                if len(seasonal_values) > 0:
+                    current_cop = round(seasonal_values.iloc[-1], 2)  # Last value = total period COP
+            # Fallback to mean of interval COPs
+            elif 'estimated_cop' in cached_cop_df.columns:
+                cop_values = cached_cop_df['estimated_cop'].dropna()
+                if len(cop_values) > 0:
+                    current_cop = round(cop_values.mean(), 2)
 
         def get_value_with_minmax(metric_name):
             """Helper to get current value with min/max/avg"""
