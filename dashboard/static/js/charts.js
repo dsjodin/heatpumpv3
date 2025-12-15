@@ -343,7 +343,8 @@ function renderCOPChart(data) {
             type: 'value',
             name: 'COP',
             min: 0,
-            max: 6
+            max: 6,
+            axisLabel: { formatter: '{value}' }
         },
         series: series,
         dataZoom: [
