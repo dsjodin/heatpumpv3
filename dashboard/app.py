@@ -343,12 +343,14 @@ def fetch_all_data_batch(time_range):
     hw_cache_elapsed = time.time() - hw_cache_start
     logger.info(f"    ⏱️  Hot water analysis took {hw_cache_elapsed:.2f}s")
 
-    # OPTIMIZATION: Calculate min/max/avg from batch data (eliminates 3 separate DB queries ~2-3s)
-    logger.info(f"  📊 Pre-calculating min/max/avg from batch data (used by status task)...")
+    # FIX: Get min/max/avg directly from DB using min()/max()/mean() on RAW data
+    # The batch data uses aggregateWindow(fn: mean) which corrupts min/max values
+    # For Thermia H66, even min/max should end in .0 (e.g., 33.0, not 31.9)
+    logger.info(f"  📊 Fetching min/max/avg directly from DB (avoids mean aggregation bug)...")
     minmax_cache_start = time.time()
-    cached_min_max = data_query.calculate_min_max_from_df(df)
+    cached_min_max = data_query.get_min_max_values(time_range)  # Uses |> min(), |> max(), |> mean() on raw data
     minmax_cache_elapsed = time.time() - minmax_cache_start
-    logger.info(f"    ⏱️  Min/max calculation took {minmax_cache_elapsed:.2f}s")
+    logger.info(f"    ⏱️  Min/max query took {minmax_cache_elapsed:.2f}s")
 
     # FIX: Get latest values directly from DB using last() - NOT from aggregated batch data
     # The batch data uses aggregateWindow(fn: mean) which causes averaged values
