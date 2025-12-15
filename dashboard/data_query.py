@@ -487,16 +487,21 @@ class HeatPumpDataQuery:
             logger.error(f"Error getting event log from dataframe: {e}")
             return []
 
-    def calculate_cop_from_df(self, df: pd.DataFrame) -> pd.DataFrame:
+    def calculate_cop_from_df(self, df: pd.DataFrame, interval_minutes: int = 15) -> pd.DataFrame:
         """
-        Calculate COP (Coefficient of Performance) from pre-fetched dataframe
+        Calculate Interval COP (Coefficient of Performance) from pre-fetched dataframe
 
-        OPTIMIZED: Uses existing dataframe to avoid redundant InfluxDB query
+        IMPROVED: Uses interval-based aggregation for more accurate COP:
+        - Groups data into fixed intervals (default 15 minutes)
+        - COP = Σ heat_output / Σ electrical_input per interval
+        - This matches industry standards and manufacturer testing methods
 
-        COP = Heat Output / Electrical Input
+        Args:
+            df: DataFrame with metrics
+            interval_minutes: Aggregation interval (default 15 min)
 
-        Uses real power consumption when available, with temperature-based
-        estimation as fallback.
+        Returns:
+            DataFrame with interval COP and cumulative COP
         """
         try:
             if df.empty:
@@ -528,45 +533,83 @@ class HeatPumpDataQuery:
             # Calculate temperature deltas
             if 'radiator_forward' in df_pivot.columns and 'radiator_return' in df_pivot.columns:
                 df_pivot['radiator_delta'] = df_pivot['radiator_forward'] - df_pivot['radiator_return']
+            else:
+                return pd.DataFrame()
 
-            if 'brine_in_evaporator' in df_pivot.columns and 'brine_out_condenser' in df_pivot.columns:
-                df_pivot['brine_delta'] = df_pivot['brine_in_evaporator'] - df_pivot['brine_out_condenser']
-
-            # COP calculation - prefer power-based when available
             has_power = 'power_consumption' in df_pivot.columns
-            has_temps = 'radiator_delta' in df_pivot.columns and 'brine_delta' in df_pivot.columns
 
-            if has_temps:
-                # Base mask: compressor running and valid temperature deltas
-                mask = (
-                    (df_pivot.get('compressor_status', 0) > 0) &
-                    (df_pivot['brine_delta'] > 0.5) &
-                    (df_pivot['radiator_delta'] > 0.5)
-                )
+            if not has_power:
+                logger.warning("No power consumption data available for COP calculation")
+                return pd.DataFrame()
 
-                if has_power:
-                    # Power-based COP calculation using heat OUTPUT (radiator side)
-                    # COP = Q_radiator / P_electrical
-                    # Q_radiator = radiator_delta × flow_factor (configurable in config.yaml)
-                    # Default flow_factor 2.7 = 0.65 L/s × 4.18 kJ/(kg·K)
-                    power_mask = mask & (df_pivot['power_consumption'] > 100)
+            # Sort by time and calculate time differences
+            df_pivot = df_pivot.sort_values('_time').reset_index(drop=True)
+            df_pivot['time_diff_hours'] = df_pivot['_time'].diff().dt.total_seconds() / 3600
+            df_pivot['time_diff_hours'] = df_pivot['time_diff_hours'].fillna(0).clip(0, 1)  # Cap at 1 hour max
 
-                    # Estimate heat output (kW) from radiator temperature delta
-                    q_radiator_kw = df_pivot.loc[power_mask, 'radiator_delta'] * self.cop_flow_factor
-                    power_kw = df_pivot.loc[power_mask, 'power_consumption'] / 1000.0
+            # Calculate instantaneous heat output and power (in kWh for each sample period)
+            # Q = radiator_delta × flow_factor × time
+            # Only count when compressor is running and delta is positive
+            valid_mask = (
+                (df_pivot.get('compressor_status', pd.Series([1] * len(df_pivot))) > 0) &
+                (df_pivot['radiator_delta'] > 0.5) &
+                (df_pivot['power_consumption'] > 100)
+            )
 
-                    # COP = Heat Output / Electrical Input
-                    df_pivot.loc[power_mask, 'estimated_cop'] = q_radiator_kw / power_kw
-                else:
-                    # Fallback: temperature-based estimation (original formula)
-                    df_pivot.loc[mask, 'estimated_cop'] = 2.0 + (
-                        df_pivot.loc[mask, 'radiator_delta'] / df_pivot.loc[mask, 'brine_delta']
-                    )
+            df_pivot['heat_kwh'] = 0.0
+            df_pivot['elec_kwh'] = 0.0
 
-                # Clamp to reasonable values (1.5 - 6.0)
-                df_pivot['estimated_cop'] = df_pivot['estimated_cop'].clip(1.5, 6.0)
+            # Heat output in kWh = (delta_T × flow_factor) × time_hours
+            df_pivot.loc[valid_mask, 'heat_kwh'] = (
+                df_pivot.loc[valid_mask, 'radiator_delta'] * self.cop_flow_factor *
+                df_pivot.loc[valid_mask, 'time_diff_hours']
+            )
 
-            return df_pivot
+            # Electrical input in kWh = power_W / 1000 × time_hours
+            df_pivot.loc[valid_mask, 'elec_kwh'] = (
+                df_pivot.loc[valid_mask, 'power_consumption'] / 1000.0 *
+                df_pivot.loc[valid_mask, 'time_diff_hours']
+            )
+
+            # Create interval groups (e.g., 15-minute intervals)
+            df_pivot['interval'] = df_pivot['_time'].dt.floor(f'{interval_minutes}min')
+
+            # Aggregate by interval: sum heat and electricity
+            interval_df = df_pivot.groupby('interval').agg({
+                'heat_kwh': 'sum',
+                'elec_kwh': 'sum',
+                'radiator_forward': 'mean',
+                'radiator_return': 'mean',
+                'power_consumption': 'mean'
+            }).reset_index()
+
+            # Calculate interval COP = Σ heat / Σ electricity
+            interval_df['estimated_cop'] = None
+            valid_intervals = interval_df['elec_kwh'] > 0.01  # At least some electricity used
+
+            interval_df.loc[valid_intervals, 'estimated_cop'] = (
+                interval_df.loc[valid_intervals, 'heat_kwh'] /
+                interval_df.loc[valid_intervals, 'elec_kwh']
+            )
+
+            # Clamp to reasonable values (1.5 - 6.0)
+            interval_df['estimated_cop'] = interval_df['estimated_cop'].clip(1.5, 6.0)
+
+            # Calculate cumulative/seasonal COP
+            interval_df['cumulative_heat'] = interval_df['heat_kwh'].cumsum()
+            interval_df['cumulative_elec'] = interval_df['elec_kwh'].cumsum()
+            interval_df['seasonal_cop'] = None
+
+            cumulative_valid = interval_df['cumulative_elec'] > 0.1
+            interval_df.loc[cumulative_valid, 'seasonal_cop'] = (
+                interval_df.loc[cumulative_valid, 'cumulative_heat'] /
+                interval_df.loc[cumulative_valid, 'cumulative_elec']
+            ).clip(1.5, 6.0)
+
+            # Rename interval column to _time for compatibility
+            interval_df = interval_df.rename(columns={'interval': '_time'})
+
+            return interval_df
 
         except Exception as e:
             logger.error(f"Error calculating COP from dataframe: {e}")

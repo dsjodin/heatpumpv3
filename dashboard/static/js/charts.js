@@ -292,25 +292,58 @@ function renderCOPChart(data) {
 
     const timestamps = data.cop.timestamps;
     const copValues = data.cop.values || data.cop.cop || [];
+    const seasonalValues = data.cop.seasonal_values || [];
     const series = [];
 
+    // Interval COP (main line)
     if (copValues.length > 0) {
         // Format as [[timestamp, value]] for time axis
-        // Replace zero/low COP values with null to create gaps (no spike to 0)
+        // Values are already interval-aggregated, null means no compressor activity
         const formattedData = timestamps.map((t, i) => {
             const val = copValues[i];
-            // COP below 1 is meaningless (compressor off), show as gap
             return [t, (val && val >= 1) ? val : null];
         });
         series.push({
-            name: 'COP',
+            name: 'Interval COP',
             type: 'line',
             data: formattedData,
+            smooth: false,  // Step-like for interval data
+            symbol: 'none',
+            connectNulls: false,
+            lineStyle: { width: 2, color: COLORS.cop },
+            itemStyle: { color: COLORS.cop },
+            areaStyle: {
+                color: {
+                    type: 'linear',
+                    x: 0, y: 0, x2: 0, y2: 1,
+                    colorStops: [
+                        { offset: 0, color: 'rgba(39, 174, 96, 0.3)' },
+                        { offset: 1, color: 'rgba(39, 174, 96, 0.05)' }
+                    ]
+                }
+            }
+        });
+    }
+
+    // Seasonal/Cumulative COP (dashed line)
+    if (seasonalValues.length > 0) {
+        const seasonalData = timestamps.map((t, i) => {
+            const val = seasonalValues[i];
+            return [t, (val && val >= 1) ? val : null];
+        });
+        series.push({
+            name: 'Period COP',
+            type: 'line',
+            data: seasonalData,
             smooth: true,
             symbol: 'none',
-            connectNulls: false,  // Don't connect across gaps
-            lineStyle: { width: 3, color: COLORS.cop },
-            itemStyle: { color: COLORS.cop }
+            connectNulls: true,  // Connect across gaps for cumulative
+            lineStyle: {
+                width: 2,
+                color: '#e74c3c',
+                type: 'dashed'
+            },
+            itemStyle: { color: '#e74c3c' }
         });
     }
 
@@ -335,7 +368,12 @@ function renderCOPChart(data) {
                 return result;
             }
         },
-        grid: { left: 50, right: 20, top: 20, bottom: 80 },
+        legend: {
+            data: ['Interval COP', 'Period COP'],
+            bottom: 55,
+            textStyle: { fontSize: 11 }
+        },
+        grid: { left: 50, right: 20, top: 20, bottom: 100 },
         xAxis: {
             type: 'time',
             axisLabel: {
@@ -364,7 +402,7 @@ function renderCOPChart(data) {
                 start: savedZoomState ? savedZoomState.start : 0,
                 end: savedZoomState ? savedZoomState.end : 100,
                 height: 30,
-                bottom: 30,
+                bottom: 20,
                 showDetail: true,
                 labelFormatter: (value) => {
                     const d = new Date(value);
@@ -557,7 +595,7 @@ function updateChartTitle(chartType) {
     const titles = {
         temperature: '<i class="fas fa-temperature-high me-2"></i>Temperaturer',
         power: '<i class="fas fa-bolt me-2"></i>Effekt',
-        cop: '<i class="fas fa-chart-line me-2"></i>COP (Värmefaktor)',
+        cop: '<i class="fas fa-chart-line me-2"></i>Interval COP (15 min)',
         energy: '<i class="fas fa-pie-chart me-2"></i>Energifördelning'
     };
 

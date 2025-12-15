@@ -420,89 +420,143 @@ def fetch_all_data_batch(time_range):
 
 # Helper functions to extract data from pre-pivoted dataframe
 
-def calculate_cop_from_pivot(df_pivot):
-    """Calculate COP from pre-pivoted dataframe (guaranteed aligned timestamps)
+def calculate_cop_from_pivot(df_pivot, interval_minutes=15):
+    """Calculate Interval COP from pre-pivoted dataframe (guaranteed aligned timestamps)
 
-    Uses power-based formula when power_consumption is available:
-    COP = (radiator_delta × flow_factor) / power_kW
+    IMPROVED: Uses interval-based aggregation for more accurate COP:
+    - Groups data into fixed intervals (default 15 minutes)
+    - COP = Σ heat_output / Σ electrical_input per interval
+    - This matches industry standards and manufacturer testing methods
+
+    Returns a NEW dataframe with interval-aggregated COP values.
     """
     try:
+        if df_pivot.empty:
+            return pd.DataFrame()
+
         # Get flow_factor from data_query (configured in config.yaml)
         flow_factor = data_query.cop_flow_factor
 
-        # Calculate temperature deltas
-        if 'radiator_forward' in df_pivot.columns and 'radiator_return' in df_pivot.columns:
-            df_pivot['radiator_delta'] = df_pivot['radiator_forward'] - df_pivot['radiator_return']
+        # Make a copy to avoid modifying original
+        df = df_pivot.copy()
 
-        if 'brine_in_evaporator' in df_pivot.columns and 'brine_out_condenser' in df_pivot.columns:
-            df_pivot['brine_delta'] = df_pivot['brine_in_evaporator'] - df_pivot['brine_out_condenser']
+        # Calculate temperature deltas
+        if 'radiator_forward' in df.columns and 'radiator_return' in df.columns:
+            df['radiator_delta'] = df['radiator_forward'] - df['radiator_return']
+        else:
+            return pd.DataFrame()
 
         # Check what data we have
-        has_power = 'power_consumption' in df_pivot.columns
-        has_temps = 'radiator_delta' in df_pivot.columns and 'brine_delta' in df_pivot.columns
-        has_compressor = 'compressor_status' in df_pivot.columns
+        has_power = 'power_consumption' in df.columns
+        has_compressor = 'compressor_status' in df.columns
 
-        if has_temps:
-            # Base mask: compressor running and valid temperature deltas
-            # Use fillna(0) to handle NaN values in compressor_status
-            if has_compressor:
-                compressor_on = df_pivot['compressor_status'].fillna(0) > 0
-            else:
-                compressor_on = True  # Assume always on if no data
+        if not has_power:
+            logger.warning("No power consumption data available for COP calculation")
+            return pd.DataFrame()
 
-            mask = (
-                compressor_on &
-                (df_pivot['brine_delta'].fillna(0) > 0.5) &
-                (df_pivot['radiator_delta'].fillna(0) > 0.5)
-            )
+        # Sort by time and calculate time differences
+        df = df.sort_values('_time').reset_index(drop=True)
+        df['time_diff_hours'] = df['_time'].diff().dt.total_seconds() / 3600
+        df['time_diff_hours'] = df['time_diff_hours'].fillna(0).clip(0, 1)  # Cap at 1 hour max
 
-            if has_power:
-                # Power-based COP calculation (more accurate)
-                # COP = Q_radiator / P_electrical
-                # Q_radiator = radiator_delta × flow_factor (kW)
-                power_mask = mask & (df_pivot['power_consumption'].fillna(0) > 100)
+        # Valid mask: compressor running and valid data
+        if has_compressor:
+            compressor_on = df['compressor_status'].fillna(0) > 0
+        else:
+            compressor_on = True
 
-                q_radiator_kw = df_pivot.loc[power_mask, 'radiator_delta'] * flow_factor
-                power_kw = df_pivot.loc[power_mask, 'power_consumption'] / 1000.0
+        valid_mask = (
+            compressor_on &
+            (df['radiator_delta'].fillna(0) > 0.5) &
+            (df['power_consumption'].fillna(0) > 100)
+        )
 
-                df_pivot.loc[power_mask, 'estimated_cop'] = q_radiator_kw / power_kw
-            else:
-                # Fallback: temperature-based estimation
-                df_pivot.loc[mask, 'estimated_cop'] = 2.0 + (
-                    df_pivot.loc[mask, 'radiator_delta'] / df_pivot.loc[mask, 'brine_delta']
-                )
+        df['heat_kwh'] = 0.0
+        df['elec_kwh'] = 0.0
 
-            # Clamp to reasonable values (1.5 - 6.0)
-            df_pivot['estimated_cop'] = df_pivot['estimated_cop'].clip(1.5, 6.0)
+        # Heat output in kWh = (delta_T × flow_factor) × time_hours
+        df.loc[valid_mask, 'heat_kwh'] = (
+            df.loc[valid_mask, 'radiator_delta'] * flow_factor *
+            df.loc[valid_mask, 'time_diff_hours']
+        )
 
-        return df_pivot
+        # Electrical input in kWh = power_W / 1000 × time_hours
+        df.loc[valid_mask, 'elec_kwh'] = (
+            df.loc[valid_mask, 'power_consumption'] / 1000.0 *
+            df.loc[valid_mask, 'time_diff_hours']
+        )
+
+        # Create interval groups (e.g., 15-minute intervals)
+        df['interval'] = df['_time'].dt.floor(f'{interval_minutes}min')
+
+        # Aggregate by interval: sum heat and electricity
+        interval_df = df.groupby('interval').agg({
+            'heat_kwh': 'sum',
+            'elec_kwh': 'sum',
+            'radiator_forward': 'mean',
+            'radiator_return': 'mean',
+            'power_consumption': 'mean'
+        }).reset_index()
+
+        # Calculate interval COP = Σ heat / Σ electricity
+        interval_df['estimated_cop'] = None
+        valid_intervals = interval_df['elec_kwh'] > 0.01  # At least some electricity used
+
+        interval_df.loc[valid_intervals, 'estimated_cop'] = (
+            interval_df.loc[valid_intervals, 'heat_kwh'] /
+            interval_df.loc[valid_intervals, 'elec_kwh']
+        )
+
+        # Clamp to reasonable values (1.5 - 6.0)
+        interval_df['estimated_cop'] = interval_df['estimated_cop'].clip(1.5, 6.0)
+
+        # Calculate cumulative/seasonal COP
+        interval_df['cumulative_heat'] = interval_df['heat_kwh'].cumsum()
+        interval_df['cumulative_elec'] = interval_df['elec_kwh'].cumsum()
+        interval_df['seasonal_cop'] = None
+
+        cumulative_valid = interval_df['cumulative_elec'] > 0.1
+        interval_df.loc[cumulative_valid, 'seasonal_cop'] = (
+            interval_df.loc[cumulative_valid, 'cumulative_heat'] /
+            interval_df.loc[cumulative_valid, 'cumulative_elec']
+        ).clip(1.5, 6.0)
+
+        # Rename interval column to _time for compatibility
+        interval_df = interval_df.rename(columns={'interval': '_time'})
+
+        return interval_df
     except Exception as e:
         logger.error(f"Error calculating COP from pivot: {e}")
-        return df_pivot
+        return pd.DataFrame()
 
 
-def get_cop_data_from_pivot(df_pivot):
-    """Extract COP data from pre-pivoted dataframe (guaranteed aligned timestamps)"""
+def get_cop_data_from_pivot(df_cop):
+    """Extract COP data from pre-calculated interval COP dataframe"""
     try:
-        if df_pivot.empty or 'estimated_cop' not in df_pivot.columns:
-            return {'timestamps': [], 'values': [], 'avg': 0}
+        if df_cop.empty or 'estimated_cop' not in df_cop.columns:
+            return {'timestamps': [], 'values': [], 'seasonal_values': [], 'avg': 0}
 
-        # DON'T drop NaN values - keep timestamps aligned with other charts
-        # Convert NaN to None (becomes null in JSON) for gaps when compressor is off
-        timestamps = df_pivot['_time'].astype(str).tolist()
-        values = df_pivot['estimated_cop'].replace({float('nan'): None}).tolist()
+        # Convert timestamps and COP values
+        timestamps = df_cop['_time'].astype(str).tolist()
+        values = df_cop['estimated_cop'].replace({float('nan'): None}).tolist()
+
+        # Include seasonal COP if available
+        seasonal_values = []
+        if 'seasonal_cop' in df_cop.columns:
+            seasonal_values = df_cop['seasonal_cop'].replace({float('nan'): None}).tolist()
 
         # Calculate average only from non-NaN values
-        avg_cop = float(df_pivot['estimated_cop'].mean()) if not df_pivot['estimated_cop'].isna().all() else 0
+        avg_cop = float(df_cop['estimated_cop'].mean()) if not df_cop['estimated_cop'].isna().all() else 0
 
         return {
             'timestamps': timestamps,
             'values': values,
+            'seasonal_values': seasonal_values,
             'avg': avg_cop
         }
     except Exception as e:
         logger.error(f"Error getting COP data from pivot: {e}")
-        return {'timestamps': [], 'values': [], 'avg': 0}
+        return {'timestamps': [], 'values': [], 'seasonal_values': [], 'avg': 0}
 
 
 def get_temperature_data_from_pivot(df_pivot):
