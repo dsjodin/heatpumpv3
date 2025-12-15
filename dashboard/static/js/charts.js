@@ -296,13 +296,19 @@ function renderCOPChart(data) {
 
     if (copValues.length > 0) {
         // Format as [[timestamp, value]] for time axis
-        const formattedData = timestamps.map((t, i) => [t, copValues[i]]);
+        // Replace zero/low COP values with null to create gaps (no spike to 0)
+        const formattedData = timestamps.map((t, i) => {
+            const val = copValues[i];
+            // COP below 1 is meaningless (compressor off), show as gap
+            return [t, (val && val >= 1) ? val : null];
+        });
         series.push({
             name: 'COP',
             type: 'line',
             data: formattedData,
             smooth: true,
             symbol: 'none',
+            connectNulls: false,  // Don't connect across gaps
             lineStyle: { width: 3, color: COLORS.cop },
             itemStyle: { color: COLORS.cop }
         });
