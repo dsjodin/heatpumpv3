@@ -181,14 +181,56 @@ function updateMonitorPanels(data) {
         }
     }
 
-    // Temperature panel
+    // Helper for setting min/max/avg
+    function setMinMaxAvg(prefix, data) {
+        if (!data) return;
+        const minEl = document.getElementById(`${prefix}-min`);
+        const avgEl = document.getElementById(`${prefix}-avg`);
+        const maxEl = document.getElementById(`${prefix}-max`);
+        if (minEl && data.min !== null && data.min !== undefined) {
+            minEl.textContent = data.min.toFixed(1);
+        }
+        if (avgEl && data.avg !== null && data.avg !== undefined) {
+            avgEl.textContent = data.avg.toFixed(1);
+        }
+        if (maxEl && data.max !== null && data.max !== undefined) {
+            maxEl.textContent = data.max.toFixed(1);
+        }
+    }
+
+    // Simple temperature values
     if (current.outdoor_temp) setValue('panel-outdoor-temp', current.outdoor_temp.current, '°C');
     if (current.indoor_temp) setValue('panel-indoor-temp', current.indoor_temp.current, '°C');
-    if (current.radiator_forward) setValue('panel-radiator-forward', current.radiator_forward.current, '°C');
-    if (current.radiator_return) setValue('panel-radiator-return', current.radiator_return.current, '°C');
-    if (current.brine_in) setValue('panel-brine-in', current.brine_in.current, '°C');
-    if (current.brine_out) setValue('panel-brine-out', current.brine_out.current, '°C');
-    if (current.hot_water) setValue('panel-hotwater', current.hot_water.current, '°C');
+
+    // Radiator forward with min/max/avg
+    if (current.radiator_forward) {
+        setValue('panel-radiator-forward', current.radiator_forward.current, '°C');
+        setMinMaxAvg('panel-rad-fwd', current.radiator_forward);
+    }
+
+    // Radiator return with min/max/avg
+    if (current.radiator_return) {
+        setValue('panel-radiator-return', current.radiator_return.current, '°C');
+        setMinMaxAvg('panel-rad-ret', current.radiator_return);
+    }
+
+    // Brine in with min/max/avg
+    if (current.brine_in) {
+        setValue('panel-brine-in', current.brine_in.current, '°C');
+        setMinMaxAvg('panel-brine-in', current.brine_in);
+    }
+
+    // Brine out with min/max/avg
+    if (current.brine_out) {
+        setValue('panel-brine-out', current.brine_out.current, '°C');
+        setMinMaxAvg('panel-brine-out', current.brine_out);
+    }
+
+    // Hot water with min/max/avg
+    if (current.hot_water) {
+        setValue('panel-hotwater', current.hot_water.current, '°C');
+        setMinMaxAvg('panel-hw', current.hot_water);
+    }
 
     // Hetgas (pressure_tube_temp)
     if (current.hotgas_temp !== undefined) {
