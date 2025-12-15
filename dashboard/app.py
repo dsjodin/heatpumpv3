@@ -432,13 +432,20 @@ def calculate_cop_from_pivot(df_pivot, interval_minutes=15):
     """
     try:
         if df_pivot.empty:
+            logger.warning("calculate_cop_from_pivot: Empty input dataframe")
             return pd.DataFrame()
+
+        logger.debug(f"calculate_cop_from_pivot: Input shape {df_pivot.shape}, columns: {list(df_pivot.columns)}")
 
         # Get flow_factor from data_query (configured in config.yaml)
         flow_factor = data_query.cop_flow_factor
 
         # Make a copy to avoid modifying original
         df = df_pivot.copy()
+
+        # Ensure _time is datetime
+        if '_time' in df.columns and not pd.api.types.is_datetime64_any_dtype(df['_time']):
+            df['_time'] = pd.to_datetime(df['_time'])
 
         # Calculate temperature deltas
         if 'radiator_forward' in df.columns and 'radiator_return' in df.columns:
@@ -487,7 +494,10 @@ def calculate_cop_from_pivot(df_pivot, interval_minutes=15):
         )
 
         # Create interval groups (e.g., 15-minute intervals)
-        df['interval'] = df['_time'].dt.floor(f'{interval_minutes}min')
+        # Use 'T' suffix for broader pandas compatibility
+        df['interval'] = df['_time'].dt.floor(f'{interval_minutes}T')
+
+        logger.debug(f"calculate_cop_from_pivot: Valid samples: {valid_mask.sum()}/{len(df)}, total heat: {df['heat_kwh'].sum():.2f} kWh, total elec: {df['elec_kwh'].sum():.2f} kWh")
 
         # Aggregate by interval: sum heat and electricity
         interval_df = df.groupby('interval').agg({
@@ -524,9 +534,12 @@ def calculate_cop_from_pivot(df_pivot, interval_minutes=15):
         # Rename interval column to _time for compatibility
         interval_df = interval_df.rename(columns={'interval': '_time'})
 
+        valid_cop_count = interval_df['estimated_cop'].notna().sum()
+        logger.info(f"calculate_cop_from_pivot: Generated {len(interval_df)} intervals, {valid_cop_count} with valid COP")
+
         return interval_df
     except Exception as e:
-        logger.error(f"Error calculating COP from pivot: {e}")
+        logger.error(f"Error calculating COP from pivot: {e}", exc_info=True)
         return pd.DataFrame()
 
 
