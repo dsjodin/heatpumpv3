@@ -378,7 +378,7 @@ def fetch_all_data_batch(time_range):
     pool = eventlet.GreenPool(size=10)
 
     tasks = {
-        'cop': lambda: get_cop_data_from_pivot(viz_df_pivot),  # Uses pivoted viz data (aligned)
+        'cop': lambda: get_cop_data_from_pivot(cached_cop_df),  # Uses interval COP data
         'temperature': lambda: get_temperature_data_from_pivot(viz_df_pivot),  # Uses pivoted viz data (aligned)
         'runtime': lambda: get_runtime_data_cached(cached_runtime_stats),
         'sankey': lambda: get_sankey_data_cached(cached_cop_df, cached_runtime_stats),  # Uses COP for average
