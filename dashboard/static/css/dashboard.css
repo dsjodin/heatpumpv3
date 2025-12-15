@@ -175,12 +175,12 @@ body {
 }
 
 .metric-label {
-    font-size: 0.7rem;
-    color: #636e72;
+    font-size: 0.8rem;
+    color: #2d3436;
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    margin-bottom: 0.15rem;
-    font-weight: 600;
+    margin-bottom: 0.2rem;
+    font-weight: 700;
 }
 
 .metric-label i {
