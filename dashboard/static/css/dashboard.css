@@ -39,26 +39,46 @@ body {
 }
 
 /* ==================== Header ==================== */
-.navbar {
+.main-header {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8c42 100%);
     box-shadow: var(--shadow-md);
+    padding: 0.5rem 1rem;
 }
 
 .navbar-brand {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     font-weight: bold;
     color: #ffffff !important;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* View Tabs */
+.view-tabs .nav-link {
+    color: rgba(255,255,255,0.8);
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.view-tabs .nav-link:hover {
+    color: #ffffff;
+    background: rgba(255,255,255,0.1);
+}
+
+.view-tabs .nav-link.active {
+    color: #ff6b6b;
+    background: #ffffff;
+    font-weight: 600;
 }
 
 #last-update {
-    color: #ffffff !important;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+    color: rgba(255,255,255,0.8) !important;
+    font-size: 0.8rem;
 }
 
 .connection-badge {
-    font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
-    animation: pulse 2s infinite;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
 }
 
 .connection-badge.connected {
@@ -67,7 +87,152 @@ body {
 
 .connection-badge.disconnected {
     background-color: #dc3545 !important;
-    animation: none;
+}
+
+/* ==================== Status Bar ==================== */
+.status-bar {
+    background: #2d3436;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #636e72;
+}
+
+.status-pill {
+    background: #636e72;
+    color: #ffffff;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    border-radius: 15px;
+    transition: all 0.2s;
+}
+
+.status-pill.status-on {
+    background: #00b894;
+}
+
+.status-pill.status-off {
+    background: #636e72;
+}
+
+.status-pill.status-alarm {
+    background: #d63031;
+    animation: pulse-alarm 1s infinite;
+}
+
+@keyframes pulse-alarm {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* ==================== View Content ==================== */
+.view-content {
+    display: none;
+}
+
+.view-content.active {
+    display: block;
+}
+
+/* ==================== Data Panels (Monitor View) ==================== */
+.data-panel {
+    border: none;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.data-panel .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 8px 8px 0 0 !important;
+}
+
+.data-table {
+    font-size: 0.85rem;
+}
+
+.data-table td {
+    padding: 0.5rem 0.75rem;
+    vertical-align: middle;
+}
+
+.data-table td:first-child {
+    color: #636e72;
+}
+
+.data-table td:last-child {
+    font-size: 1rem;
+}
+
+/* Schema Card */
+.schema-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    height: 100%;
+}
+
+.schema-card .card-header {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff8c42 100%);
+    color: white;
+    font-weight: 600;
+    border-radius: 8px 8px 0 0 !important;
+}
+
+/* Collapsible sections */
+.collapsible-header {
+    cursor: pointer;
+    background: #f8f9fa;
+    transition: background 0.2s;
+}
+
+.collapsible-header:hover {
+    background: #e9ecef;
+}
+
+.collapsible-header .collapse-icon {
+    transition: transform 0.3s;
+}
+
+.collapsible-header[aria-expanded="true"] .collapse-icon {
+    transform: rotate(180deg);
+}
+
+/* ==================== Analys View ==================== */
+.legend-color {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+.stat-mini {
+    padding: 0.5rem;
+}
+
+.stat-mini .stat-label {
+    font-size: 0.7rem;
+    color: #636e72;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-mini .stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2d3436;
+}
+
+/* Series toggles row - only show for temperature chart */
+#series-toggles-row {
+    transition: all 0.3s;
+}
+
+/* Overlay toggles */
+.overlay-toggle:checked + label {
+    font-weight: 600;
 }
 
 @keyframes pulse {

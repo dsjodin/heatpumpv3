@@ -1466,6 +1466,16 @@ def get_status_data_fully_cached(cached_cop_df, cached_min_max, cached_latest_va
                 'avg': avg_val
             }
 
+        # Get Hetgas (pressure_tube_temp) value
+        pressure_tube_temp = None
+        if current_metrics.get('pressure_tube_temp', {}).get('value') is not None:
+            pressure_tube_temp = round(current_metrics.get('pressure_tube_temp', {}).get('value'), 1)
+
+        # Get Integral (degree_minutes) value
+        degree_minutes = None
+        if current_metrics.get('degree_minutes', {}).get('value') is not None:
+            degree_minutes = round(current_metrics.get('degree_minutes', {}).get('value'), 0)
+
         status = {
             'alarm': {
                 'is_active': alarm.get('is_alarm', False),
@@ -1487,7 +1497,9 @@ def get_status_data_fully_cached(cached_cop_df, cached_min_max, cached_latest_va
                 'radiator_pump_running': bool(current_metrics.get('radiator_pump_status', {}).get('value', 0)),
                 'switch_valve_status': int(current_metrics.get('switch_valve_status', {}).get('value', 0)) if current_metrics.get('switch_valve_status', {}).get('value') is not None else 0,
                 'aux_heater': current_metrics.get('additional_heat_percent', {}).get('value', 0) > 0 if current_metrics.get('additional_heat_percent', {}).get('value') is not None else False,
-                'current_cop': current_cop
+                'current_cop': current_cop,
+                'pressure_tube_temp': pressure_tube_temp,  # Hetgas temperature
+                'degree_minutes': degree_minutes  # Integral value
             },
             'timestamp': datetime.now().isoformat()
         }
