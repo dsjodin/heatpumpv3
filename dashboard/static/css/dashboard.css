@@ -150,8 +150,8 @@ body {
 /* ==================== Metric Cards ==================== */
 .metric-card {
     background: white;
-    border-radius: 10px;
-    padding: 0.6rem;
+    border-radius: 8px;
+    padding: 0.4rem 0.5rem;
     box-shadow: var(--shadow-sm);
     text-align: center;
     transition: transform 0.2s, box-shadow 0.2s;
@@ -159,39 +159,39 @@ body {
 }
 
 .metric-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: var(--shadow-md);
 }
 
 .metric-label {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     color: #636e72;
     text-transform: uppercase;
     letter-spacing: 0.3px;
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.1rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .metric-label i {
-    margin-right: 0.2rem;
+    margin-right: 0.15rem;
 }
 
 .metric-value {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     font-weight: 700;
     color: #2d3436;
-    line-height: 1.2;
+    line-height: 1.1;
 }
 
 .metric-minmax {
     display: flex;
     justify-content: space-between;
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     color: #636e72;
-    margin-top: 0.25rem;
-    padding-top: 0.25rem;
+    margin-top: 0.15rem;
+    padding-top: 0.15rem;
     border-top: 1px solid #eee;
 }
 
