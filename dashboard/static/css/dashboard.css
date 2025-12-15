@@ -198,21 +198,22 @@ body {
 .metric-minmax {
     display: flex;
     justify-content: space-around;
-    font-size: 0.65rem;
-    color: #868e96;
+    font-size: 0.8rem;
+    color: #495057;
     margin-top: 0.35rem;
     padding-top: 0.35rem;
     border-top: 1px dashed rgba(0,0,0,0.08);
+    font-weight: 500;
 }
 
 .metric-minmax span {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 3px;
 }
 
 .metric-minmax i {
-    font-size: 0.55rem;
+    font-size: 0.7rem;
 }
 
 .metric-minmax .fa-arrow-down { color: #3498db; }
