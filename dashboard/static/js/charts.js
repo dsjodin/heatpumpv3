@@ -425,13 +425,14 @@ function renderEnergyChart(data) {
     const runtime = kpi.runtime || {};
 
     const totalEnergy = energy.total_kwh || 0;
-    const compPercent = runtime.compressor_runtime_percent || 0;
-    const auxPercent = runtime.aux_heater_runtime_percent || 0;
+    // Backend sends compressor_percent, not compressor_runtime_percent
+    const compPercent = runtime.compressor_percent || 0;
+    const auxPercent = runtime.aux_heater_percent || 0;
 
     // Estimate energy split (simplified)
     const compEnergy = totalEnergy * (compPercent / 100) * 0.8;
     const auxEnergy = totalEnergy * (auxPercent / 100) * 0.2;
-    const standbyEnergy = totalEnergy - compEnergy - auxEnergy;
+    const standbyEnergy = Math.max(0, totalEnergy - compEnergy - auxEnergy);
 
     const option = {
         tooltip: { trigger: 'item' },
