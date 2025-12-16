@@ -1040,8 +1040,8 @@ def get_sankey_data(time_range):
             has_data = True
 
         # Ensure reasonable COP value
-        if avg_cop < 1.5 or avg_cop > 6.0:
-            avg_cop = 3.0
+        if avg_cop < 1.5 or avg_cop > 5.0:
+            avg_cop = 3.5
 
         # Calculate energy flows (normalized to 100 units electric power)
         electric_power = 100
@@ -1099,8 +1099,8 @@ def get_sankey_data_cached(cached_cop_df, cached_runtime_stats):
             has_data = True
 
         # Ensure reasonable COP value
-        if avg_cop < 1.5 or avg_cop > 6.0:
-            avg_cop = 3.0
+        if avg_cop < 1.5 or avg_cop > 5.0:
+            avg_cop = 3.5
 
         # Calculate energy flows (normalized to 100 units electric power)
         electric_power = 100

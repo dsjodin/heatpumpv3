@@ -306,8 +306,8 @@ class HeatPumpDataQuery:
                     df_pivot.loc[mask, 'radiator_delta'] / df_pivot.loc[mask, 'brine_delta']
                 )
 
-                # Clamp to reasonable values (1.5 - 6.0)
-                df_pivot['estimated_cop'] = df_pivot['estimated_cop'].clip(1.5, 6.0)
+                # Clamp to reasonable values (1.5 - 5.0) - 5.0 is excellent for GSHP
+                df_pivot['estimated_cop'] = df_pivot['estimated_cop'].clip(1.5, 5.0)
 
             return df_pivot
 
