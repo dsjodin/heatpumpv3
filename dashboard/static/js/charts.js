@@ -23,6 +23,8 @@ const COLORS = {
     hot_gas_compressor: '#2c3e50',  // Dark blue for Hetgas (IVT)
     indoor_temp: '#10ac84',
     degree_minutes: '#636e72',  // Integral (Thermia only)
+    radiator_delta: '#e67e22',  // Orange for radiator/heat carrier delta
+    brine_delta: '#9b59b6',     // Purple for brine/köldbärare delta
     power: '#f39c12',
     cop: '#27ae60',
     compressor_overlay: 'rgba(52, 152, 219, 0.15)',  // Light blue
@@ -44,6 +46,8 @@ const SERIES_NAMES = {
     hot_gas_compressor: 'Hetgas',  // IVT
     indoor_temp: 'Inne',
     degree_minutes: 'Integral',  // Thermia only
+    radiator_delta: 'Δ Radiator',
+    brine_delta: 'Δ Köldbärare',
     power_consumption: 'Effekt',
     cop: 'COP'
 };
@@ -206,6 +210,36 @@ function renderTemperatureChart(data) {
             yAxisIndex: 1,  // Secondary Y-axis (Integral)
             lineStyle: { width: 2, color: COLORS.degree_minutes, type: 'dashed' },
             itemStyle: { color: COLORS.degree_minutes }
+        });
+    }
+
+    // Add Radiator Delta (Δ Radiator) - works for both Thermia and IVT
+    if (data.temperature.radiator_delta && visibleSeries.includes('radiator_delta')) {
+        const formattedData = timestamps.map((t, i) => [t, data.temperature.radiator_delta[i]]);
+        series.push({
+            name: SERIES_NAMES.radiator_delta,
+            type: 'line',
+            data: formattedData,
+            smooth: true,
+            symbol: 'none',
+            yAxisIndex: 0,
+            lineStyle: { width: 2, color: COLORS.radiator_delta },
+            itemStyle: { color: COLORS.radiator_delta }
+        });
+    }
+
+    // Add Brine/Köldbärare Delta (Δ Köldbärare)
+    if (data.temperature.brine_delta && visibleSeries.includes('brine_delta')) {
+        const formattedData = timestamps.map((t, i) => [t, data.temperature.brine_delta[i]]);
+        series.push({
+            name: SERIES_NAMES.brine_delta,
+            type: 'line',
+            data: formattedData,
+            smooth: true,
+            symbol: 'none',
+            yAxisIndex: 0,
+            lineStyle: { width: 2, color: COLORS.brine_delta },
+            itemStyle: { color: COLORS.brine_delta }
         });
     }
 

@@ -631,6 +631,21 @@ def get_temperature_data_from_pivot(df_pivot):
                 # Replace NaN with None for JSON null values
                 result[metric] = df_pivot[metric].replace({float('nan'): None}).tolist()
 
+        # Calculate delta for radiator side (Thermia: radiator, IVT: heat_carrier)
+        if 'heat_carrier_forward' in df_pivot.columns and 'heat_carrier_return' in df_pivot.columns:
+            # IVT uses heat_carrier
+            df_pivot['radiator_delta'] = df_pivot['heat_carrier_forward'] - df_pivot['heat_carrier_return']
+            result['radiator_delta'] = df_pivot['radiator_delta'].replace({float('nan'): None}).tolist()
+        elif 'radiator_forward' in df_pivot.columns and 'radiator_return' in df_pivot.columns:
+            # Thermia uses radiator
+            df_pivot['radiator_delta'] = df_pivot['radiator_forward'] - df_pivot['radiator_return']
+            result['radiator_delta'] = df_pivot['radiator_delta'].replace({float('nan'): None}).tolist()
+
+        # Calculate delta for brine/köldbärare side
+        if 'brine_in_evaporator' in df_pivot.columns and 'brine_out_condenser' in df_pivot.columns:
+            df_pivot['brine_delta'] = df_pivot['brine_in_evaporator'] - df_pivot['brine_out_condenser']
+            result['brine_delta'] = df_pivot['brine_delta'].replace({float('nan'): None}).tolist()
+
         return result
     except Exception as e:
         logger.error(f"Error getting temperature data from pivot: {e}")
