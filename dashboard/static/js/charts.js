@@ -17,7 +17,7 @@ const COLORS = {
     brine_in_evaporator: '#54a0ff',
     brine_out_condenser: '#00d2d3',
     outdoor_temp: '#5f27cd',
-    pressure_tube_temp: '#ee5a24',
+    pressure_tube_temp: '#2c3e50',  // Dark blue for Hetgas
     indoor_temp: '#10ac84',
     degree_minutes: '#636e72',  // Integral (Thermia only)
     power: '#f39c12',
@@ -120,6 +120,8 @@ function renderTemperatureChart(data) {
         if (data.temperature[metric] && visibleSeries.includes(metric)) {
             // Format data as [timestamp, value] pairs for time axis
             const formattedData = timestamps.map((t, i) => [t, data.temperature[metric][i]]);
+            // Use dashed line for Hetgas (pressure_tube_temp)
+            const lineType = metric === 'pressure_tube_temp' ? 'dashed' : 'solid';
             series.push({
                 name: SERIES_NAMES[metric] || metric,
                 type: 'line',
@@ -127,7 +129,7 @@ function renderTemperatureChart(data) {
                 smooth: true,
                 symbol: 'none',
                 yAxisIndex: 0,  // Primary Y-axis (°C)
-                lineStyle: { width: 2, color: COLORS[metric] },
+                lineStyle: { width: 2, color: COLORS[metric], type: lineType },
                 itemStyle: { color: COLORS[metric] }
             });
         }
