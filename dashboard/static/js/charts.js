@@ -581,12 +581,19 @@ function buildOverlayMarkAreas(data, chartTimestamps) {
 
     // Check valve endpoint data
     if (data.valve) {
+        console.log('📊 Valve data available:', Object.keys(data.valve));
         if (data.valve.compressor_status && Array.isArray(data.valve.compressor_status)) {
             compressorData = data.valve.compressor_status;
+            console.log(`📊 Compressor data: ${compressorData.length} points`);
         }
         if (data.valve.valve_status && Array.isArray(data.valve.valve_status)) {
             valveData = data.valve.valve_status;
+            console.log(`📊 Valve status data: ${valveData.length} points`);
+        } else {
+            console.log('📊 No valve_status data found in data.valve');
         }
+    } else {
+        console.log('📊 No data.valve object available');
     }
 
     // Check power endpoint data for aux heater
