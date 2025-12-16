@@ -13,6 +13,8 @@ let savedZoomState = null;  // Preserve zoom between updates
 const COLORS = {
     radiator_forward: '#ff6b6b',
     radiator_return: '#feca57',
+    heat_carrier_forward: '#ff6b6b',  // IVT - same color as radiator_forward
+    heat_carrier_return: '#feca57',   // IVT - same color as radiator_return
     hot_water_top: '#ff9ff3',
     brine_in_evaporator: '#54a0ff',
     brine_out_condenser: '#00d2d3',
@@ -32,6 +34,8 @@ const COLORS = {
 const SERIES_NAMES = {
     radiator_forward: 'Fram',
     radiator_return: 'Retur',
+    heat_carrier_forward: 'Fram',  // IVT
+    heat_carrier_return: 'Retur',  // IVT
     hot_water_top: 'Varmvatten',
     brine_in_evaporator: 'KB In',
     brine_out_condenser: 'KB Ut',
@@ -113,14 +117,13 @@ function renderTemperatureChart(data) {
     const brand = schemaContainer ? schemaContainer.dataset.brand : 'thermia';
 
     // Temperature series - format as [[timestamp, value], ...] for time axis
+    // For IVT: use heat_carrier_forward/return instead of radiator_forward/return
     const tempMetrics = [
-        'radiator_forward', 'radiator_return', 'hot_water_top',
-        'brine_in_evaporator', 'brine_out_condenser', 'outdoor_temp'
+        'hot_water_top', 'brine_in_evaporator', 'brine_out_condenser', 'outdoor_temp'
     ];
 
     tempMetrics.forEach(metric => {
         if (data.temperature[metric] && visibleSeries.includes(metric)) {
-            // Format data as [timestamp, value] pairs for time axis
             const formattedData = timestamps.map((t, i) => [t, data.temperature[metric][i]]);
             series.push({
                 name: SERIES_NAMES[metric] || metric,
@@ -128,12 +131,48 @@ function renderTemperatureChart(data) {
                 data: formattedData,
                 smooth: true,
                 symbol: 'none',
-                yAxisIndex: 0,  // Primary Y-axis (°C)
+                yAxisIndex: 0,
                 lineStyle: { width: 2, color: COLORS[metric] },
                 itemStyle: { color: COLORS[metric] }
             });
         }
     });
+
+    // Fram (forward) - IVT uses heat_carrier_forward, Thermia uses radiator_forward
+    if (visibleSeries.includes('radiator_forward')) {
+        const forwardData = data.temperature.heat_carrier_forward || data.temperature.radiator_forward;
+        if (forwardData) {
+            const formattedData = timestamps.map((t, i) => [t, forwardData[i]]);
+            series.push({
+                name: 'Fram',
+                type: 'line',
+                data: formattedData,
+                smooth: true,
+                symbol: 'none',
+                yAxisIndex: 0,
+                lineStyle: { width: 2, color: COLORS.radiator_forward },
+                itemStyle: { color: COLORS.radiator_forward }
+            });
+        }
+    }
+
+    // Retur (return) - IVT uses heat_carrier_return, Thermia uses radiator_return
+    if (visibleSeries.includes('radiator_return')) {
+        const returnData = data.temperature.heat_carrier_return || data.temperature.radiator_return;
+        if (returnData) {
+            const formattedData = timestamps.map((t, i) => [t, returnData[i]]);
+            series.push({
+                name: 'Retur',
+                type: 'line',
+                data: formattedData,
+                smooth: true,
+                symbol: 'none',
+                yAxisIndex: 0,
+                lineStyle: { width: 2, color: COLORS.radiator_return },
+                itemStyle: { color: COLORS.radiator_return }
+            });
+        }
+    }
 
     // Add Hetgas series - Thermia uses pressure_tube_temp, IVT uses hot_gas_compressor
     // Both map to the same checkbox (pressure_tube_temp)

@@ -589,8 +589,8 @@ def get_temperature_data_from_pivot(df_pivot):
         # Extract each metric with same timestamp index
         metrics = [
             'outdoor_temp', 'indoor_temp', 'radiator_forward',
-            'radiator_return', 'hot_water_top',
-            'brine_in_evaporator', 'brine_out_condenser',
+            'radiator_return', 'heat_carrier_forward', 'heat_carrier_return',  # IVT alternative
+            'hot_water_top', 'brine_in_evaporator', 'brine_out_condenser',
             'pressure_tube_temp', 'hot_gas_compressor',  # Hetgas: Thermia or IVT
             'degree_minutes'  # Integral for Thermia
         ]
