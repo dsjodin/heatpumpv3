@@ -301,7 +301,8 @@ def fetch_all_data_batch(time_range):
     viz_metrics = [
         'outdoor_temp', 'indoor_temp', 'radiator_forward', 'radiator_return',
         'hot_water_top', 'brine_in_evaporator', 'brine_out_condenser',
-        'compressor_status', 'power_consumption'
+        'compressor_status', 'power_consumption', 'pressure_tube_temp',
+        'degree_minutes'  # Integral for Thermia
     ]
     viz_aggregation = data_query._get_cop_aggregation_window(time_range)
     viz_df_raw = data_query.query_metrics(viz_metrics, time_range, aggregation_window=viz_aggregation)
@@ -586,7 +587,9 @@ def get_temperature_data_from_pivot(df_pivot):
         metrics = [
             'outdoor_temp', 'indoor_temp', 'radiator_forward',
             'radiator_return', 'hot_water_top',
-            'brine_in_evaporator', 'brine_out_condenser'
+            'brine_in_evaporator', 'brine_out_condenser',
+            'pressure_tube_temp',  # Hetgas
+            'degree_minutes'  # Integral for Thermia
         ]
 
         result = {'timestamps': timestamps}
@@ -1368,6 +1371,7 @@ def get_status_data(time_range='24h'):
                 'compressor_running': bool(current_metrics.get('compressor_status', {}).get('value', 0)),
                 'brine_pump_running': bool(current_metrics.get('brine_pump_status', {}).get('value', 0)),
                 'radiator_pump_running': bool(current_metrics.get('radiator_pump_status', {}).get('value', 0)),
+                'vvb_pump_running': bool(current_metrics.get('pump_heat_circuit', {}).get('value', 0)),  # IVT only
                 'switch_valve_status': int(current_metrics.get('switch_valve_status', {}).get('value', 0)) if current_metrics.get('switch_valve_status', {}).get('value') is not None else 0,
                 'aux_heater': current_metrics.get('additional_heat_percent', {}).get('value', 0) > 0 if current_metrics.get('additional_heat_percent', {}).get('value') is not None else False,
                 'current_cop': current_cop
@@ -1448,6 +1452,7 @@ def get_status_data_cached(time_range='24h', cached_cop_df=None, cached_min_max=
                 'compressor_running': bool(current_metrics.get('compressor_status', {}).get('value', 0)),
                 'brine_pump_running': bool(current_metrics.get('brine_pump_status', {}).get('value', 0)),
                 'radiator_pump_running': bool(current_metrics.get('radiator_pump_status', {}).get('value', 0)),
+                'vvb_pump_running': bool(current_metrics.get('pump_heat_circuit', {}).get('value', 0)),  # IVT only
                 'switch_valve_status': int(current_metrics.get('switch_valve_status', {}).get('value', 0)) if current_metrics.get('switch_valve_status', {}).get('value') is not None else 0,
                 'aux_heater': current_metrics.get('additional_heat_percent', {}).get('value', 0) > 0 if current_metrics.get('additional_heat_percent', {}).get('value') is not None else False,
                 'current_cop': current_cop
@@ -1580,6 +1585,7 @@ def get_status_data_fully_cached(cached_cop_df, cached_min_max, cached_latest_va
                 'compressor_running': bool(current_metrics.get('compressor_status', {}).get('value', 0)),
                 'brine_pump_running': bool(current_metrics.get('brine_pump_status', {}).get('value', 0)),
                 'radiator_pump_running': bool(current_metrics.get('radiator_pump_status', {}).get('value', 0)),
+                'vvb_pump_running': bool(current_metrics.get('pump_heat_circuit', {}).get('value', 0)),  # IVT only
                 'switch_valve_status': int(current_metrics.get('switch_valve_status', {}).get('value', 0)) if current_metrics.get('switch_valve_status', {}).get('value') is not None else 0,
                 'aux_heater': current_metrics.get('additional_heat_percent', {}).get('value', 0) > 0 if current_metrics.get('additional_heat_percent', {}).get('value') is not None else False,
                 'current_cop': current_cop,

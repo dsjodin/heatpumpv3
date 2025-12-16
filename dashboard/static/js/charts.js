@@ -19,6 +19,7 @@ const COLORS = {
     outdoor_temp: '#5f27cd',
     pressure_tube_temp: '#ee5a24',
     indoor_temp: '#10ac84',
+    degree_minutes: '#636e72',  // Integral (Thermia only)
     power: '#f39c12',
     cop: '#27ae60',
     compressor_overlay: 'rgba(52, 152, 219, 0.15)',
@@ -36,6 +37,7 @@ const SERIES_NAMES = {
     outdoor_temp: 'Ute',
     pressure_tube_temp: 'Hetgas',
     indoor_temp: 'Inne',
+    degree_minutes: 'Integral',  // Thermia only
     power_consumption: 'Effekt',
     cop: 'COP'
 };
@@ -104,6 +106,10 @@ function renderTemperatureChart(data) {
     // Get visible series from checkboxes
     const visibleSeries = getVisibleSeries();
 
+    // Get brand from schema container
+    const schemaContainer = document.getElementById('schema-container');
+    const brand = schemaContainer ? schemaContainer.dataset.brand : 'thermia';
+
     // Temperature series - format as [[timestamp, value], ...] for time axis
     const tempMetrics = [
         'radiator_forward', 'radiator_return', 'hot_water_top',
@@ -120,11 +126,28 @@ function renderTemperatureChart(data) {
                 data: formattedData,
                 smooth: true,
                 symbol: 'none',
+                yAxisIndex: 0,  // Primary Y-axis (°C)
                 lineStyle: { width: 2, color: COLORS[metric] },
                 itemStyle: { color: COLORS[metric] }
             });
         }
     });
+
+    // Add Integral (degree_minutes) for Thermia only - uses second Y-axis
+    const hasIntegral = brand === 'thermia' && data.temperature.degree_minutes && visibleSeries.includes('degree_minutes');
+    if (hasIntegral) {
+        const formattedData = timestamps.map((t, i) => [t, data.temperature.degree_minutes[i]]);
+        series.push({
+            name: SERIES_NAMES.degree_minutes,
+            type: 'line',
+            data: formattedData,
+            smooth: true,
+            symbol: 'none',
+            yAxisIndex: 1,  // Secondary Y-axis (Integral)
+            lineStyle: { width: 2, color: COLORS.degree_minutes, type: 'dashed' },
+            itemStyle: { color: COLORS.degree_minutes }
+        });
+    }
 
     // Add overlay bands (compressor, valve, aux)
     const markAreas = buildOverlayMarkAreas(data, timestamps);
@@ -136,6 +159,24 @@ function renderTemperatureChart(data) {
         };
     }
 
+    // Configure Y-axes
+    const yAxisConfig = [{
+        type: 'value',
+        name: '°C',
+        axisLabel: { formatter: '{value}°C' }
+    }];
+
+    // Add secondary Y-axis for Integral if needed
+    if (hasIntegral) {
+        yAxisConfig.push({
+            type: 'value',
+            name: 'Integral',
+            position: 'right',
+            axisLine: { lineStyle: { color: COLORS.degree_minutes } },
+            axisLabel: { formatter: '{value}' }
+        });
+    }
+
     const option = {
         tooltip: {
             trigger: 'axis',
@@ -145,7 +186,10 @@ function renderTemperatureChart(data) {
                 let result = time.toLocaleString('sv-SE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '<br/>';
                 params.forEach(p => {
                     if (p.value && p.value[1] !== null && p.value[1] !== undefined) {
-                        result += `${p.marker} ${p.seriesName}: ${p.value[1].toFixed(1)}°C<br/>`;
+                        // Show Integral without unit, temperatures with °C
+                        const unit = p.seriesName === 'Integral' ? '' : '°C';
+                        const decimals = p.seriesName === 'Integral' ? 0 : 1;
+                        result += `${p.marker} ${p.seriesName}: ${p.value[1].toFixed(decimals)}${unit}<br/>`;
                     }
                 });
                 return result;
@@ -158,7 +202,7 @@ function renderTemperatureChart(data) {
         },
         grid: {
             left: 50,
-            right: 20,
+            right: hasIntegral ? 60 : 20,  // Extra space for secondary Y-axis
             top: 20,
             bottom: 80
         },
@@ -171,11 +215,7 @@ function renderTemperatureChart(data) {
                 }
             }
         },
-        yAxis: {
-            type: 'value',
-            name: '°C',
-            axisLabel: { formatter: '{value}°C' }
-        },
+        yAxis: yAxisConfig,
         series: series,
         dataZoom: [
             {

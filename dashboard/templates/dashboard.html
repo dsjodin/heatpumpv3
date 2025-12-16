@@ -65,6 +65,11 @@
                 <span class="badge status-pill" id="status-radiator-pump">
                     <i class="fas fa-sun me-1"></i>Radiatorpump: <span id="status-rad-text">--</span>
                 </span>
+                {% if brand == 'ivt' %}
+                <span class="badge status-pill" id="status-vvb-pump">
+                    <i class="fas fa-hot-tub me-1"></i>VVB-pump: <span id="status-vvb-text">--</span>
+                </span>
+                {% endif %}
                 <span class="badge status-pill" id="status-valve">
                     <i class="fas fa-random me-1"></i>Växelventil: <span id="status-valve-text">--</span>
                 </span>
@@ -415,6 +420,14 @@
                                         <span class="legend-color" style="background: #ee5a24;"></span> Hetgas
                                     </label>
                                 </div>
+                                {% if brand == 'thermia' %}
+                                <div class="form-check">
+                                    <input class="form-check-input series-toggle" type="checkbox" id="series-integral" data-series="degree_minutes">
+                                    <label class="form-check-label small" for="series-integral">
+                                        <span class="legend-color" style="background: #636e72;"></span> Integral
+                                    </label>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

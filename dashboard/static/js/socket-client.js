@@ -149,6 +149,9 @@ function updateStatusPills(data) {
     updatePill('status-radiator-pump', 'status-rad-text', current.radiator_pump_running);
     updatePill('status-aux', 'status-aux-text', current.aux_heater);
 
+    // VVB-pump status (IVT only)
+    updatePill('status-vvb-pump', 'status-vvb-text', current.vvb_pump_running);
+
     // Valve status
     const valvePill = document.getElementById('status-valve');
     const valveText = document.getElementById('status-valve-text');
