@@ -879,10 +879,16 @@ def get_valve_data_from_df(df):
         }
 
         if df.empty:
+            logger.warning("get_valve_data_from_df: DataFrame is empty")
             return result
+
+        # Debug: show available metrics
+        available_metrics = df['name'].unique().tolist() if 'name' in df.columns else []
+        logger.info(f"get_valve_data_from_df: Available metrics: {available_metrics}")
 
         # Get valve status
         valve = df[df['name'] == 'switch_valve_status']
+        logger.info(f"get_valve_data_from_df: switch_valve_status rows: {len(valve)}")
         if not valve.empty:
             result['valve_status'] = [
                 [row['_time'].isoformat(), float(row['_value'])]
