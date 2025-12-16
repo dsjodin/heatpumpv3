@@ -17,7 +17,8 @@ const COLORS = {
     brine_in_evaporator: '#54a0ff',
     brine_out_condenser: '#00d2d3',
     outdoor_temp: '#5f27cd',
-    pressure_tube_temp: '#2c3e50',  // Dark blue for Hetgas
+    pressure_tube_temp: '#2c3e50',  // Dark blue for Hetgas (Thermia)
+    hot_gas_temp: '#2c3e50',  // Dark blue for Hetgas (IVT)
     indoor_temp: '#10ac84',
     degree_minutes: '#636e72',  // Integral (Thermia only)
     power: '#f39c12',
@@ -35,7 +36,8 @@ const SERIES_NAMES = {
     brine_in_evaporator: 'KB In',
     brine_out_condenser: 'KB Ut',
     outdoor_temp: 'Ute',
-    pressure_tube_temp: 'Hetgas',
+    pressure_tube_temp: 'Hetgas',  // Thermia
+    hot_gas_temp: 'Hetgas',  // IVT
     indoor_temp: 'Inne',
     degree_minutes: 'Integral',  // Thermia only
     power_consumption: 'Effekt',
@@ -113,15 +115,13 @@ function renderTemperatureChart(data) {
     // Temperature series - format as [[timestamp, value], ...] for time axis
     const tempMetrics = [
         'radiator_forward', 'radiator_return', 'hot_water_top',
-        'brine_in_evaporator', 'brine_out_condenser', 'outdoor_temp', 'pressure_tube_temp'
+        'brine_in_evaporator', 'brine_out_condenser', 'outdoor_temp'
     ];
 
     tempMetrics.forEach(metric => {
         if (data.temperature[metric] && visibleSeries.includes(metric)) {
             // Format data as [timestamp, value] pairs for time axis
             const formattedData = timestamps.map((t, i) => [t, data.temperature[metric][i]]);
-            // Use dashed line for Hetgas (pressure_tube_temp)
-            const lineType = metric === 'pressure_tube_temp' ? 'dashed' : 'solid';
             series.push({
                 name: SERIES_NAMES[metric] || metric,
                 type: 'line',
@@ -129,11 +129,30 @@ function renderTemperatureChart(data) {
                 smooth: true,
                 symbol: 'none',
                 yAxisIndex: 0,  // Primary Y-axis (°C)
-                lineStyle: { width: 2, color: COLORS[metric], type: lineType },
+                lineStyle: { width: 2, color: COLORS[metric] },
                 itemStyle: { color: COLORS[metric] }
             });
         }
     });
+
+    // Add Hetgas series - Thermia uses pressure_tube_temp, IVT uses hot_gas_temp
+    // Both map to the same checkbox (pressure_tube_temp)
+    if (visibleSeries.includes('pressure_tube_temp')) {
+        const hetgasData = data.temperature.pressure_tube_temp || data.temperature.hot_gas_temp;
+        if (hetgasData) {
+            const formattedData = timestamps.map((t, i) => [t, hetgasData[i]]);
+            series.push({
+                name: 'Hetgas',
+                type: 'line',
+                data: formattedData,
+                smooth: true,
+                symbol: 'none',
+                yAxisIndex: 0,
+                lineStyle: { width: 2, color: COLORS.pressure_tube_temp, type: 'dashed' },
+                itemStyle: { color: COLORS.pressure_tube_temp }
+            });
+        }
+    }
 
     // Add Integral (degree_minutes) for Thermia only - uses second Y-axis
     const hasIntegral = brand === 'thermia' && data.temperature.degree_minutes && visibleSeries.includes('degree_minutes');

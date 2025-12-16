@@ -301,7 +301,8 @@ def fetch_all_data_batch(time_range):
     viz_metrics = [
         'outdoor_temp', 'indoor_temp', 'radiator_forward', 'radiator_return',
         'hot_water_top', 'brine_in_evaporator', 'brine_out_condenser',
-        'compressor_status', 'power_consumption', 'pressure_tube_temp',
+        'compressor_status', 'power_consumption',
+        'pressure_tube_temp', 'hot_gas_temp',  # Hetgas: Thermia uses pressure_tube_temp, IVT uses hot_gas_temp
         'degree_minutes'  # Integral for Thermia
     ]
     viz_aggregation = data_query._get_cop_aggregation_window(time_range)
@@ -588,7 +589,7 @@ def get_temperature_data_from_pivot(df_pivot):
             'outdoor_temp', 'indoor_temp', 'radiator_forward',
             'radiator_return', 'hot_water_top',
             'brine_in_evaporator', 'brine_out_condenser',
-            'pressure_tube_temp',  # Hetgas
+            'pressure_tube_temp', 'hot_gas_temp',  # Hetgas: Thermia or IVT
             'degree_minutes'  # Integral for Thermia
         ]
 
@@ -1556,10 +1557,12 @@ def get_status_data_fully_cached(cached_cop_df, cached_min_max, cached_latest_va
                 'avg': avg_val
             }
 
-        # Get Hetgas (pressure_tube_temp) value
-        pressure_tube_temp = None
+        # Get Hetgas temperature - Thermia uses pressure_tube_temp, IVT uses hot_gas_temp
+        hotgas_temp = None
         if current_metrics.get('pressure_tube_temp', {}).get('value') is not None:
-            pressure_tube_temp = round(current_metrics.get('pressure_tube_temp', {}).get('value'), 1)
+            hotgas_temp = round(current_metrics.get('pressure_tube_temp', {}).get('value'), 1)
+        elif current_metrics.get('hot_gas_temp', {}).get('value') is not None:
+            hotgas_temp = round(current_metrics.get('hot_gas_temp', {}).get('value'), 1)
 
         # Get Integral (degree_minutes) value
         degree_minutes = None
@@ -1589,7 +1592,7 @@ def get_status_data_fully_cached(cached_cop_df, cached_min_max, cached_latest_va
                 'switch_valve_status': int(current_metrics.get('switch_valve_status', {}).get('value', 0)) if current_metrics.get('switch_valve_status', {}).get('value') is not None else 0,
                 'aux_heater': current_metrics.get('additional_heat_percent', {}).get('value', 0) > 0 if current_metrics.get('additional_heat_percent', {}).get('value') is not None else False,
                 'current_cop': current_cop,
-                'pressure_tube_temp': pressure_tube_temp,  # Hetgas temperature
+                'hotgas_temp': hotgas_temp,  # Hetgas temperature (pressure_tube_temp or hot_gas_temp)
                 'degree_minutes': degree_minutes  # Integral value
             },
             'timestamp': datetime.now().isoformat()
