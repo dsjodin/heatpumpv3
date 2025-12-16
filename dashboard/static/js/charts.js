@@ -25,9 +25,9 @@ const COLORS = {
     degree_minutes: '#636e72',  // Integral (Thermia only)
     power: '#f39c12',
     cop: '#27ae60',
-    compressor_overlay: 'rgba(52, 152, 219, 0.2)',
-    valve_overlay: 'rgba(255, 165, 0, 0.4)',  // Orange, more visible
-    aux_overlay: 'rgba(231, 76, 60, 0.3)'
+    compressor_overlay: 'rgba(52, 152, 219, 0.15)',
+    valve_overlay: 'rgba(255, 0, 255, 0.5)',  // Magenta, very visible
+    aux_overlay: 'rgba(231, 76, 60, 0.4)'
 };
 
 // Series names in Swedish
