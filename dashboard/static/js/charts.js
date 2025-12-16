@@ -25,9 +25,9 @@ const COLORS = {
     degree_minutes: '#636e72',  // Integral (Thermia only)
     power: '#f39c12',
     cop: '#27ae60',
-    compressor_overlay: 'rgba(52, 152, 219, 0.15)',
-    valve_overlay: 'rgba(155, 89, 182, 0.3)',
-    aux_overlay: 'rgba(231, 76, 60, 0.2)'
+    compressor_overlay: 'rgba(52, 152, 219, 0.2)',
+    valve_overlay: 'rgba(255, 165, 0, 0.4)',  // Orange, more visible
+    aux_overlay: 'rgba(231, 76, 60, 0.3)'
 };
 
 // Series names in Swedish
@@ -211,12 +211,16 @@ function renderTemperatureChart(data) {
 
     // Add overlay bands (compressor, valve, aux)
     const markAreas = buildOverlayMarkAreas(data, timestamps);
+    console.log(`📊 Temperature chart: ${series.length} series, ${markAreas.length} mark areas`);
 
     if (series.length > 0 && markAreas.length > 0) {
         series[0].markArea = {
             silent: true,
             data: markAreas
         };
+        console.log(`📊 Applied ${markAreas.length} mark areas to first series`);
+    } else {
+        console.log(`📊 NOT applying mark areas: series=${series.length}, markAreas=${markAreas.length}`);
     }
 
     // Configure Y-axes
