@@ -418,7 +418,8 @@ class HeatPumpDataQuery:
                 'radiator_pump_status': ('Radiatorpump', '📡', '📡'),
                 'switch_valve_status': ('Varmvattencykel', '🚿', '🚿'),
                 'additional_heat_percent': ('Tillsattsvärme', '🔥', '🔥'),
-                'alarm_code': ('Larm', '⚠️', '✅')
+                'alarm_code': ('Larm', '⚠️', '✅'),
+                'alarm_status': ('Larmstatus', '⚠️', '✅')
             }
 
             for metric_name, (display_name, icon_on, icon_off) in event_metrics.items():
@@ -475,6 +476,13 @@ class HeatPumpDataQuery:
                         if current > 0 and previous == 0:
                             alarm_desc = self.alarm_codes.get(int(current), f"Kod {int(current)}")
                             events.append({'time': timestamp, 'event': f'LARM - {alarm_desc}', 'type': 'danger', 'icon': icon_on})
+                        elif current == 0 and previous > 0:
+                            events.append({'time': timestamp, 'event': 'Larm återställt', 'type': 'success', 'icon': icon_off})
+
+                    elif metric_name == 'alarm_status':
+                        # IVT uses alarm_status to signal active alarms (alarm_code may be 0)
+                        if current > 0 and previous == 0:
+                            events.append({'time': timestamp, 'event': 'Larm aktiverat', 'type': 'danger', 'icon': icon_on})
                         elif current == 0 and previous > 0:
                             events.append({'time': timestamp, 'event': 'Larm återställt', 'type': 'success', 'icon': icon_off})
 
@@ -1189,11 +1197,12 @@ class HeatPumpDataQuery:
             # Hämta state changes för de senaste 24 timmarna
             metrics = [
                 'compressor_status',
-                'brine_pump_status', 
+                'brine_pump_status',
                 'radiator_pump_status',
                 'switch_valve_status',
                 'additional_heat_percent',
-                'alarm_code'
+                'alarm_code',
+                'alarm_status'
             ]
             
             logger.info(f"Fetching event log for {len(metrics)} metrics...")
@@ -1359,7 +1368,26 @@ class HeatPumpDataQuery:
                                 'icon': '✅'
                             })
                             changes_detected += 1
-                
+
+                    # Larmstatus (IVT uses alarm_status to signal active alarms)
+                    elif metric == 'alarm_status':
+                        if current > 0 and previous == 0:
+                            events.append({
+                                'time': timestamp,
+                                'event': 'Larm aktiverat',
+                                'type': 'danger',
+                                'icon': '⚠️'
+                            })
+                            changes_detected += 1
+                        elif current == 0 and previous > 0:
+                            events.append({
+                                'time': timestamp,
+                                'event': 'Larm återställt',
+                                'type': 'success',
+                                'icon': '✅'
+                            })
+                            changes_detected += 1
+
                 logger.info(f"Detected {changes_detected} changes for {metric}")
             
             logger.info(f"Total events before sorting: {len(events)}")
