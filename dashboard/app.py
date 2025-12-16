@@ -547,8 +547,14 @@ def calculate_cop_from_pivot(df_pivot, interval_minutes=15):
             interval_df.loc[valid_intervals, 'elec_kwh']
         )
 
-        # Clamp to reasonable values (1.5 - 6.0)
-        interval_df['estimated_cop'] = interval_df['estimated_cop'].clip(1.5, 6.0)
+        # Log raw COP before clamping for diagnostics
+        if valid_intervals.any():
+            raw_cop_mean = interval_df.loc[valid_intervals, 'estimated_cop'].mean()
+            raw_cop_max = interval_df.loc[valid_intervals, 'estimated_cop'].max()
+            logger.info(f"calculate_cop_from_pivot: Raw COP before clamp - mean: {raw_cop_mean:.2f}, max: {raw_cop_max:.2f}")
+
+        # Clamp to reasonable values (1.5 - 5.0) - 5.0 is already excellent for GSHP
+        interval_df['estimated_cop'] = interval_df['estimated_cop'].clip(1.5, 5.0)
 
         # Calculate cumulative/seasonal COP
         interval_df['cumulative_heat'] = interval_df['heat_kwh'].cumsum()
@@ -559,7 +565,7 @@ def calculate_cop_from_pivot(df_pivot, interval_minutes=15):
         interval_df.loc[cumulative_valid, 'seasonal_cop'] = (
             interval_df.loc[cumulative_valid, 'cumulative_heat'] /
             interval_df.loc[cumulative_valid, 'cumulative_elec']
-        ).clip(1.5, 6.0)
+        ).clip(1.5, 5.0)
 
         # Rename interval column to _time for compatibility
         interval_df = interval_df.rename(columns={'interval': '_time'})

@@ -622,8 +622,8 @@ class HeatPumpDataQuery:
                 interval_df.loc[valid_intervals, 'elec_kwh']
             )
 
-            # Clamp to reasonable values (1.5 - 6.0)
-            interval_df['estimated_cop'] = interval_df['estimated_cop'].clip(1.5, 6.0)
+            # Clamp to reasonable values (1.5 - 5.0) - 5.0 is already excellent for GSHP
+            interval_df['estimated_cop'] = interval_df['estimated_cop'].clip(1.5, 5.0)
 
             # Calculate cumulative/seasonal COP
             interval_df['cumulative_heat'] = interval_df['heat_kwh'].cumsum()
@@ -634,7 +634,7 @@ class HeatPumpDataQuery:
             interval_df.loc[cumulative_valid, 'seasonal_cop'] = (
                 interval_df.loc[cumulative_valid, 'cumulative_heat'] /
                 interval_df.loc[cumulative_valid, 'cumulative_elec']
-            ).clip(1.5, 6.0)
+            ).clip(1.5, 5.0)
 
             # Rename interval column to _time for compatibility
             interval_df = interval_df.rename(columns={'interval': '_time'})
