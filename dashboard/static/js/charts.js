@@ -238,7 +238,7 @@ function renderTemperatureChart(data) {
         ]
     };
 
-    mainChart.setOption(option, { notMerge: false, lazyUpdate: true });
+    mainChart.setOption(option, { notMerge: true, lazyUpdate: true });
     updateChartTitle('temperature');
 }
 
