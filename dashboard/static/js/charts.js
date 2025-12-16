@@ -616,7 +616,7 @@ function buildOverlayMarkAreas(data, chartTimestamps) {
         if (!dataArray || dataArray.length === 0) return periods;
 
         let startTime = null;
-        let lastTime = null;
+        let lastOnTime = null;
 
         for (let i = 0; i < dataArray.length; i++) {
             const item = dataArray[i];
@@ -635,17 +635,24 @@ function buildOverlayMarkAreas(data, chartTimestamps) {
             const isOn = checkFn(value);
 
             if (isOn && startTime === null) {
+                // Start of new period
                 startTime = timestamp;
+                lastOnTime = timestamp;
+            } else if (isOn && startTime !== null) {
+                // Still ON, update lastOnTime
+                lastOnTime = timestamp;
             } else if (!isOn && startTime !== null) {
-                periods.push({ start: startTime, end: lastTime });
+                // End of period - use CURRENT timestamp as end (when it turned OFF)
+                // This ensures the overlay covers the full period
+                periods.push({ start: startTime, end: timestamp });
                 startTime = null;
+                lastOnTime = null;
             }
-            lastTime = timestamp;
         }
 
         // Close final period if still open
-        if (startTime !== null && lastTime) {
-            periods.push({ start: startTime, end: lastTime });
+        if (startTime !== null && lastOnTime) {
+            periods.push({ start: startTime, end: lastOnTime });
         }
 
         return periods;
