@@ -404,10 +404,19 @@ function updateEventLog(events) {
             }
         } catch (e) {}
 
+        // Style based on event type
+        let textClass = '';
+        if (event.type === 'danger') textClass = 'text-danger fw-bold';
+        else if (event.type === 'warning') textClass = 'text-warning';
+        else if (event.type === 'success') textClass = 'text-success';
+
+        // Backend sends 'event' field, not 'description'
+        const eventText = event.event || event.description || '';
+
         html += `
             <div class="event-item small py-1 border-bottom">
                 <span class="text-muted">${eventTime}</span>
-                <span class="ms-2">${event.icon || ''} ${event.description || ''}</span>
+                <span class="ms-2 ${textClass}">${event.icon || ''} ${eventText}</span>
             </div>
         `;
     });
