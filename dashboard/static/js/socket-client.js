@@ -376,8 +376,8 @@ function updateSchemaTemps(data) {
     setOverlayActive('overlay-VV_hot', showVVHot);
 
     if (brand === 'ivt') {
-        const showVBPump = current.radiator_pump_running === true && current.switch_valve_status > 0;
-        setOverlayActive('overlay-VB_snurr', showVBPump);
+        // VB-snurr (VVB pump) uses pump_heat_circuit status
+        setOverlayActive('overlay-VB_snurr', current.vvb_pump_running === true);
     }
 }
 
