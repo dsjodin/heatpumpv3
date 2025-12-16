@@ -453,25 +453,27 @@ def calculate_cop_from_pivot(df_pivot, interval_minutes=15):
             df['_time'] = pd.to_datetime(df['_time'])
 
         # Calculate temperature deltas
-        # Prefer heat_carrier if available and valid (IVT uses these, radiator sensors may be faulty)
+        # For COP calculation, use radiator temps (actual heat delivered to system)
+        # heat_carrier temps are INTERNAL to the heat pump and have higher delta
         forward_col = None
         return_col = None
 
-        if 'heat_carrier_forward' in df.columns and 'heat_carrier_return' in df.columns:
-            hc_forward_mean = df['heat_carrier_forward'].mean()
-            if hc_forward_mean > 0:  # Valid heat carrier data (not -48°C)
-                forward_col = 'heat_carrier_forward'
-                return_col = 'heat_carrier_return'
-                logger.debug(f"calculate_cop_from_pivot: Using heat_carrier temps (mean forward: {hc_forward_mean:.1f}°C)")
+        # Prefer radiator temps for accurate COP (heat delivered to radiators)
+        if 'radiator_forward' in df.columns and 'radiator_return' in df.columns:
+            rad_forward_mean = df['radiator_forward'].mean()
+            if rad_forward_mean > 0:  # Valid radiator data
+                forward_col = 'radiator_forward'
+                return_col = 'radiator_return'
+                logger.debug(f"calculate_cop_from_pivot: Using radiator temps (mean forward: {rad_forward_mean:.1f}°C)")
 
-        # Fall back to radiator if heat_carrier not valid
+        # Fall back to heat_carrier only if radiator not available (some installations)
         if forward_col is None:
-            if 'radiator_forward' in df.columns and 'radiator_return' in df.columns:
-                rad_forward_mean = df['radiator_forward'].mean()
-                if rad_forward_mean > 0:  # Valid radiator data
-                    forward_col = 'radiator_forward'
-                    return_col = 'radiator_return'
-                    logger.debug(f"calculate_cop_from_pivot: Using radiator temps (mean forward: {rad_forward_mean:.1f}°C)")
+            if 'heat_carrier_forward' in df.columns and 'heat_carrier_return' in df.columns:
+                hc_forward_mean = df['heat_carrier_forward'].mean()
+                if hc_forward_mean > 0:  # Valid heat carrier data (not -48°C)
+                    forward_col = 'heat_carrier_forward'
+                    return_col = 'heat_carrier_return'
+                    logger.debug(f"calculate_cop_from_pivot: Using heat_carrier temps (mean forward: {hc_forward_mean:.1f}°C)")
 
         if forward_col is None or return_col is None:
             logger.warning("calculate_cop_from_pivot: No valid forward/return temperature data")
