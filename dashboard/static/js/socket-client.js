@@ -255,11 +255,12 @@ function updateMonitorPanels(data) {
     // Runtime percentages
     if (data.kpi && data.kpi.runtime) {
         const runtime = data.kpi.runtime;
-        if (runtime.compressor_runtime_percent !== undefined) {
-            setValue('panel-comp-runtime', runtime.compressor_runtime_percent, '%');
+        // Backend sends compressor_percent, not compressor_runtime_percent
+        if (runtime.compressor_percent !== undefined) {
+            setValue('panel-comp-runtime', runtime.compressor_percent, '%');
         }
-        if (runtime.aux_heater_runtime_percent !== undefined) {
-            setValue('panel-aux-runtime', runtime.aux_heater_runtime_percent, '%');
+        if (runtime.aux_heater_percent !== undefined) {
+            setValue('panel-aux-runtime', runtime.aux_heater_percent, '%');
         }
     }
 
