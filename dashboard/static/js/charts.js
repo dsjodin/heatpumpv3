@@ -673,6 +673,10 @@ function buildOverlayMarkAreas(data, chartTimestamps) {
             ]);
         });
         console.log(`📊 Valve overlays: ${periods.length} periods`);
+        if (periods.length > 0) {
+            console.log(`📊 First valve period: ${periods[0].start} to ${periods[0].end}`);
+            console.log(`📊 Valve overlay color: ${COLORS.valve_overlay}`);
+        }
     }
 
     // Find aux heater ON periods
