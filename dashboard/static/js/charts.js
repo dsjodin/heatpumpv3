@@ -18,7 +18,7 @@ const COLORS = {
     brine_out_condenser: '#00d2d3',
     outdoor_temp: '#5f27cd',
     pressure_tube_temp: '#2c3e50',  // Dark blue for Hetgas (Thermia)
-    hot_gas_temp: '#2c3e50',  // Dark blue for Hetgas (IVT)
+    hot_gas_compressor: '#2c3e50',  // Dark blue for Hetgas (IVT)
     indoor_temp: '#10ac84',
     degree_minutes: '#636e72',  // Integral (Thermia only)
     power: '#f39c12',
@@ -37,7 +37,7 @@ const SERIES_NAMES = {
     brine_out_condenser: 'KB Ut',
     outdoor_temp: 'Ute',
     pressure_tube_temp: 'Hetgas',  // Thermia
-    hot_gas_temp: 'Hetgas',  // IVT
+    hot_gas_compressor: 'Hetgas',  // IVT
     indoor_temp: 'Inne',
     degree_minutes: 'Integral',  // Thermia only
     power_consumption: 'Effekt',
@@ -135,10 +135,10 @@ function renderTemperatureChart(data) {
         }
     });
 
-    // Add Hetgas series - Thermia uses pressure_tube_temp, IVT uses hot_gas_temp
+    // Add Hetgas series - Thermia uses pressure_tube_temp, IVT uses hot_gas_compressor
     // Both map to the same checkbox (pressure_tube_temp)
     if (visibleSeries.includes('pressure_tube_temp')) {
-        const hetgasData = data.temperature.pressure_tube_temp || data.temperature.hot_gas_temp;
+        const hetgasData = data.temperature.pressure_tube_temp || data.temperature.hot_gas_compressor;
         if (hetgasData) {
             const formattedData = timestamps.map((t, i) => [t, hetgasData[i]]);
             series.push({

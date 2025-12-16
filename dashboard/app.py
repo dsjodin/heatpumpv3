@@ -302,7 +302,7 @@ def fetch_all_data_batch(time_range):
         'outdoor_temp', 'indoor_temp', 'radiator_forward', 'radiator_return',
         'hot_water_top', 'brine_in_evaporator', 'brine_out_condenser',
         'compressor_status', 'power_consumption',
-        'pressure_tube_temp', 'hot_gas_temp',  # Hetgas: Thermia uses pressure_tube_temp, IVT uses hot_gas_temp
+        'pressure_tube_temp', 'hot_gas_compressor',  # Hetgas: Thermia uses pressure_tube_temp, IVT uses hot_gas_compressor
         'degree_minutes'  # Integral for Thermia
     ]
     viz_aggregation = data_query._get_cop_aggregation_window(time_range)
@@ -589,7 +589,7 @@ def get_temperature_data_from_pivot(df_pivot):
             'outdoor_temp', 'indoor_temp', 'radiator_forward',
             'radiator_return', 'hot_water_top',
             'brine_in_evaporator', 'brine_out_condenser',
-            'pressure_tube_temp', 'hot_gas_temp',  # Hetgas: Thermia or IVT
+            'pressure_tube_temp', 'hot_gas_compressor',  # Hetgas: Thermia or IVT
             'degree_minutes'  # Integral for Thermia
         ]
 
@@ -1557,12 +1557,12 @@ def get_status_data_fully_cached(cached_cop_df, cached_min_max, cached_latest_va
                 'avg': avg_val
             }
 
-        # Get Hetgas temperature - Thermia uses pressure_tube_temp, IVT uses hot_gas_temp
+        # Get Hetgas temperature - Thermia uses pressure_tube_temp, IVT uses hot_gas_compressor
         hotgas_temp = None
         if current_metrics.get('pressure_tube_temp', {}).get('value') is not None:
             hotgas_temp = round(current_metrics.get('pressure_tube_temp', {}).get('value'), 1)
-        elif current_metrics.get('hot_gas_temp', {}).get('value') is not None:
-            hotgas_temp = round(current_metrics.get('hot_gas_temp', {}).get('value'), 1)
+        elif current_metrics.get('hot_gas_compressor', {}).get('value') is not None:
+            hotgas_temp = round(current_metrics.get('hot_gas_compressor', {}).get('value'), 1)
 
         # Get Integral (degree_minutes) value
         degree_minutes = None
