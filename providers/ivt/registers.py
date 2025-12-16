@@ -275,10 +275,6 @@ IVT_REGISTERS = {
         "type": "temperature",
         "description": "Heat carrier in Max (90)"
     },
-    "0008": {
-        "name": "switch_on_rego",
-        "unit": "",
-        "type": "setting",
-        "description": "Set to 1 will switch on rego from standby mode. You cannot switch it off"
-    }
+    # Note: Register 0008 is indoor_temp, defined earlier in this file
+    # "switch_on_rego" was incorrectly mapped here - removed duplicate
 }
