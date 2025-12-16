@@ -1369,8 +1369,8 @@ def get_status_data(time_range='24h'):
                 'brine_in': get_value_with_minmax('brine_in_evaporator'),
                 'brine_out': get_value_with_minmax('brine_out_condenser'),
                 # IVT uses heat_carrier_forward/return, Thermia uses radiator_forward/return
-                'radiator_forward': get_value_with_minmax('heat_carrier_forward') or get_value_with_minmax('radiator_forward'),
-                'radiator_return': get_value_with_minmax('heat_carrier_return') or get_value_with_minmax('radiator_return'),
+                'radiator_forward': get_value_with_minmax('heat_carrier_forward') if get_value_with_minmax('heat_carrier_forward').get('current') is not None else get_value_with_minmax('radiator_forward'),
+                'radiator_return': get_value_with_minmax('heat_carrier_return') if get_value_with_minmax('heat_carrier_return').get('current') is not None else get_value_with_minmax('radiator_return'),
                 'power': round(current_metrics.get('power_consumption', {}).get('value', 0), 0) if current_metrics.get('power_consumption', {}).get('value') is not None else None,
                 'compressor_running': bool(current_metrics.get('compressor_status', {}).get('value', 0)),
                 'brine_pump_running': bool(current_metrics.get('brine_pump_status', {}).get('value', 0)),
@@ -1451,8 +1451,8 @@ def get_status_data_cached(time_range='24h', cached_cop_df=None, cached_min_max=
                 'brine_in': get_value_with_minmax('brine_in_evaporator'),
                 'brine_out': get_value_with_minmax('brine_out_condenser'),
                 # IVT uses heat_carrier_forward/return, Thermia uses radiator_forward/return
-                'radiator_forward': get_value_with_minmax('heat_carrier_forward') or get_value_with_minmax('radiator_forward'),
-                'radiator_return': get_value_with_minmax('heat_carrier_return') or get_value_with_minmax('radiator_return'),
+                'radiator_forward': get_value_with_minmax('heat_carrier_forward') if get_value_with_minmax('heat_carrier_forward').get('current') is not None else get_value_with_minmax('radiator_forward'),
+                'radiator_return': get_value_with_minmax('heat_carrier_return') if get_value_with_minmax('heat_carrier_return').get('current') is not None else get_value_with_minmax('radiator_return'),
                 'power': round(current_metrics.get('power_consumption', {}).get('value', 0), 0) if current_metrics.get('power_consumption', {}).get('value') is not None else None,
                 'compressor_running': bool(current_metrics.get('compressor_status', {}).get('value', 0)),
                 'brine_pump_running': bool(current_metrics.get('brine_pump_status', {}).get('value', 0)),
@@ -1587,8 +1587,8 @@ def get_status_data_fully_cached(cached_cop_df, cached_min_max, cached_latest_va
                 'brine_in': get_value_with_minmax('brine_in_evaporator'),
                 'brine_out': get_value_with_minmax('brine_out_condenser'),
                 # IVT uses heat_carrier_forward/return, Thermia uses radiator_forward/return
-                'radiator_forward': get_value_with_minmax('heat_carrier_forward') or get_value_with_minmax('radiator_forward'),
-                'radiator_return': get_value_with_minmax('heat_carrier_return') or get_value_with_minmax('radiator_return'),
+                'radiator_forward': get_value_with_minmax('heat_carrier_forward') if get_value_with_minmax('heat_carrier_forward').get('current') is not None else get_value_with_minmax('radiator_forward'),
+                'radiator_return': get_value_with_minmax('heat_carrier_return') if get_value_with_minmax('heat_carrier_return').get('current') is not None else get_value_with_minmax('radiator_return'),
                 'power': round(current_metrics.get('power_consumption', {}).get('value', 0), 0) if current_metrics.get('power_consumption', {}).get('value') is not None else None,
                 'compressor_running': bool(current_metrics.get('compressor_status', {}).get('value', 0)),
                 'brine_pump_running': bool(current_metrics.get('brine_pump_status', {}).get('value', 0)),
