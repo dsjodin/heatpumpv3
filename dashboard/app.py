@@ -271,6 +271,7 @@ def fetch_all_data_batch(time_range):
     # List ALL metrics we need (including alarm/status for events)
     all_metrics = [
         'outdoor_temp', 'indoor_temp', 'radiator_forward', 'radiator_return',
+        'heat_carrier_forward', 'heat_carrier_return',  # IVT alternative for radiator temps
         'hot_water_top', 'brine_in_evaporator', 'brine_out_condenser',
         'compressor_status', 'power_consumption', 'additional_heat_percent',
         'switch_valve_status', 'brine_pump_status', 'radiator_pump_status',
@@ -300,6 +301,7 @@ def fetch_all_data_batch(time_range):
     viz_query_start = time.time()
     viz_metrics = [
         'outdoor_temp', 'indoor_temp', 'radiator_forward', 'radiator_return',
+        'heat_carrier_forward', 'heat_carrier_return',  # IVT alternative for radiator temps
         'hot_water_top', 'brine_in_evaporator', 'brine_out_condenser',
         'compressor_status', 'power_consumption',
         'pressure_tube_temp', 'hot_gas_compressor',  # Hetgas: Thermia uses pressure_tube_temp, IVT uses hot_gas_compressor

@@ -511,6 +511,8 @@ class HeatPumpDataQuery:
             cop_metrics = [
                 'radiator_forward',
                 'radiator_return',
+                'heat_carrier_forward',  # IVT alternative
+                'heat_carrier_return',   # IVT alternative
                 'brine_in_evaporator',
                 'brine_out_condenser',
                 'power_consumption',
@@ -531,10 +533,30 @@ class HeatPumpDataQuery:
             ).reset_index()
 
             # Calculate temperature deltas
-            if 'radiator_forward' in df_pivot.columns and 'radiator_return' in df_pivot.columns:
-                df_pivot['radiator_delta'] = df_pivot['radiator_forward'] - df_pivot['radiator_return']
-            else:
+            # Use heat_carrier_forward/return as fallback for IVT (more reliable than radiator sensors)
+            forward_col = None
+            return_col = None
+
+            # Prefer heat_carrier if available and radiator values look bad (negative or missing)
+            if 'heat_carrier_forward' in df_pivot.columns and 'heat_carrier_return' in df_pivot.columns:
+                hc_forward_mean = df_pivot['heat_carrier_forward'].mean()
+                if hc_forward_mean > 0:  # Valid heat carrier data
+                    forward_col = 'heat_carrier_forward'
+                    return_col = 'heat_carrier_return'
+
+            # Fall back to radiator if heat_carrier not available or invalid
+            if forward_col is None:
+                if 'radiator_forward' in df_pivot.columns and 'radiator_return' in df_pivot.columns:
+                    rad_forward_mean = df_pivot['radiator_forward'].mean()
+                    if rad_forward_mean > 0:  # Valid radiator data
+                        forward_col = 'radiator_forward'
+                        return_col = 'radiator_return'
+
+            if forward_col is None or return_col is None:
+                logger.warning("No valid forward/return temperature data for COP calculation")
                 return pd.DataFrame()
+
+            df_pivot['radiator_delta'] = df_pivot[forward_col] - df_pivot[return_col]
 
             has_power = 'power_consumption' in df_pivot.columns
 
